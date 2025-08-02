@@ -1,7 +1,8 @@
 package com.mmiranda.pointsbackapi.controller;
 
+import com.mmiranda.pointsbackapi.dto.EstablishmentDto;
 import com.mmiranda.pointsbackapi.model.Establishment;
-import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
+import com.mmiranda.pointsbackapi.service.EstablishmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,20 +13,20 @@ import java.util.List;
 public class EstablishmentController {
 
     @Autowired
-    private EstablishmentRepository establishmentRepository;
+    private EstablishmentService establishmentService;
 
     @PostMapping
-    public Establishment createEstablishment(Establishment establishment) {
-        return establishmentRepository.save(establishment);
+    public Establishment createEstablishment(@RequestBody EstablishmentDto establishmentDto) {
+        return establishmentService.createEstablishment(establishmentDto);
     }
 
     @GetMapping("/list")
     public List<Establishment> listAllEstablishments() {
-        return establishmentRepository.findAll();
+        return establishmentService.listAllEstablishments();
     }
 
     @GetMapping("/{id}")
-    public Establishment getEstablishment(@PathVariable Long id) {
-        return establishmentRepository.findById(id).orElse(null);
+    public EstablishmentDto getEstablishment(@PathVariable Long id) {
+        return establishmentService.getEstablishmentById(id);
     }
 }

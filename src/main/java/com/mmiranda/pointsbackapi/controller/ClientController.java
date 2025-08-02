@@ -1,7 +1,8 @@
 package com.mmiranda.pointsbackapi.controller;
 
+import com.mmiranda.pointsbackapi.dto.ClientDto;
 import com.mmiranda.pointsbackapi.model.Client;
-import com.mmiranda.pointsbackapi.repository.ClientRepository;
+import com.mmiranda.pointsbackapi.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,20 +13,20 @@ import java.util.List;
 public class ClientController {
 
     @Autowired
-    private ClientRepository clientRepository;
+    private ClientService clientService;
 
     @PostMapping
-    public Client createClient(@RequestBody Client client) {
-        return clientRepository.save(client);
+    public Client createClient(@RequestBody ClientDto clientDto) {
+        return clientService.createClient(clientDto);
     }
 
     @GetMapping("/all")
     public List<Client> listAllClients() {
-        return clientRepository.findAll();
+        return clientService.listAllClients();
     }
 
     @GetMapping("/{id}")
-    public Client getClient(@PathVariable Long id) {
-        return clientRepository.findById(id).orElse(null);
+    public ClientDto getClient(@PathVariable Long id) {
+        return clientService.getClientById(id);
     }
 }
