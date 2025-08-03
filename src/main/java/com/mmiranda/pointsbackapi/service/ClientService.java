@@ -28,4 +28,12 @@ public class ClientService {
     public List<Client> listAllClients() {
         return clientRepository.findAll();
     }
+
+    public void addPoints(Long clientId, int points) {
+        clientRepository.findById(clientId).ifPresent(client -> {
+            int currentPoints = client.getPoints() != null ? client.getPoints() : 0;
+            client.setPoints(currentPoints + points);
+            clientRepository.save(client);
+        });
+    }
 }

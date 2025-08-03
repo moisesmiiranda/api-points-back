@@ -25,4 +25,6 @@ public class Client {
     @Column(unique = true)
     private String cpf;
 
+    private Integer points = 0; // Default points to 0 if not provided
+
 }
