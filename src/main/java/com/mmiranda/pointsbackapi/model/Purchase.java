@@ -1,28 +1,32 @@
 package com.mmiranda.pointsbackapi.model;
 
-import jakarta.persistence.*;
-import lombok.Builder;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
 @Entity
-@Builder
 public class Purchase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long purchaseId;
 
     @ManyToOne
     private Client client;
 
     @ManyToOne
-    private Product product;
+    private Establishment establishment;
 
-    // talvez não seja necessário a quantidade, porém, vamos deixar aqui por enquanto
-    private Integer quantity;
-    private LocalDateTime purchaseDate;
+    private BigDecimal purchaseValue;
+
+    public Purchase() {
+    }
 }
 

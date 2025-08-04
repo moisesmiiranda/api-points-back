@@ -6,23 +6,26 @@ public record EstablishmentDto(
         String name,
         String email,
         String phone,
-        String cnpj
+        String cnpj,
+        Integer valuePerPoint
 ) {
     public static EstablishmentDto toDto(Establishment establishment) {
         return new EstablishmentDto(
             establishment.getName(),
             establishment.getEmail(),
             establishment.getPhone(),
-            establishment.getCnpj()
+            establishment.getCnpj(),
+            establishment.getValuePerPoint()
         );
     }
 
     public static Establishment toEntity(EstablishmentDto dto) {
-        Establishment establishment = new Establishment();
-        establishment.setName(dto.name());
-        establishment.setEmail(dto.email());
-        establishment.setPhone(dto.phone());
-        establishment.setCnpj(dto.cnpj());
-        return establishment;
+        return new Establishment(
+            dto.name,
+            dto.email,
+            dto.phone,
+            dto.valuePerPoint,
+            dto.cnpj
+        );
     }
 }

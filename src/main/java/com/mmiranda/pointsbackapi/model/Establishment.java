@@ -1,12 +1,9 @@
 package com.mmiranda.pointsbackapi.model;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,10 +18,20 @@ public class Establishment {
     private String name;
     private String email;
     private String phone;
+    private Integer valuePerPoint;
 
     @Column(unique = true)
     private String cnpj;
 
-    @OneToMany(mappedBy = "establishment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Product> products;
+    public Establishment( String name, String email, String phone, Integer valuePerPoint, String cnpj) {
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.valuePerPoint = valuePerPoint;
+        this.cnpj = cnpj;
+    }
+
+    public Establishment() {
+    }
 }
+

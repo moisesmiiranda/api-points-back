@@ -30,8 +30,4 @@ public class ClientController {
         return clientService.getClientById(id);
     }
 
-    @PostMapping("/{id}/add-points")
-    public void addPoints(@PathVariable Long id, @RequestParam int points) {
-        clientService.addPoints(id, points);
-    }
 }
