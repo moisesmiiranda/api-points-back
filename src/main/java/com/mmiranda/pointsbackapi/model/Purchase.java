@@ -24,7 +24,7 @@ public class Purchase {
     @ManyToOne
     private Establishment establishment;
 
-    private BigDecimal purchaseValue;
+    private BigDecimal amount;
 
     public Purchase() {
     }

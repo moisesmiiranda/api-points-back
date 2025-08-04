@@ -41,7 +41,7 @@ public class PurchaseService {
             Purchase purchase = new Purchase();
             purchase.setClient(client);
 
-            int pointsEarned = calculatePoints(valuePerPoints, purchaseDto.purchaseValue());
+            int pointsEarned = calculatePoints(valuePerPoints, purchaseDto.amount());
 
             client.setPoints(client.getPoints() + pointsEarned);
 
