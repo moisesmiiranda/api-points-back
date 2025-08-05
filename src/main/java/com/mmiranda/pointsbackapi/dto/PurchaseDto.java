@@ -18,6 +18,11 @@ public record PurchaseDto(
             purchase.getAmount()
         );
     }
+    public static Purchase toEntity(PurchaseDto dto) {
+        Purchase purchase = new Purchase();
+        purchase.setPurchaseId(dto.purchaseId());
+        purchase.setAmount(dto.amount());
+        return purchase;
+    }
 
 }
-

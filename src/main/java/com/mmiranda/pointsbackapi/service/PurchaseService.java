@@ -23,38 +23,35 @@ public class PurchaseService {
     private EstablishmentRepository establishmentRepository;
 
     public List<PurchaseDto> listAllPurchases() {
-        return purchaseRepository.findAll().stream()
+        List<Purchase> purchases =  purchaseRepository.findAll();
+        return purchases.stream()
                 .map(PurchaseDto::toDto)
                 .toList();
     }
 
     public void registerPurchase(PurchaseDto purchaseDto) {
 
-        int valuePerPoints = establishmentRepository
+        var establishment = establishmentRepository
             .findById(purchaseDto.establishmentId())
-            .orElseThrow(() -> new RuntimeException("Cannot find establishment with id: " + purchaseDto.establishmentId()))
-            .getValuePerPoint();
+            .orElseThrow(() -> new RuntimeException("Cannot find establishment with id: " + purchaseDto.establishmentId()));
 
-        try {
-            Client client = clientRepository.findById(purchaseDto.clientId()).orElseThrow();
+        Client client = clientRepository.findById(purchaseDto.clientId())
+                .orElseThrow(() -> new RuntimeException("Cannot find client with id: " + purchaseDto.clientId()));
 
-            Purchase purchase = new Purchase();
-            purchase.setClient(client);
+        Purchase purchase = new Purchase();
+        purchase.setClient(client);
+        purchase.setEstablishment(establishment);
+        purchase.setAmount(purchaseDto.amount());
 
-            int pointsEarned = calculatePoints(valuePerPoints, purchaseDto.amount());
+        int pointsEarned = calculatePoints(establishment.getValuePerPoint(), purchaseDto.amount());
 
-            client.setPoints(client.getPoints() + pointsEarned);
+        client.setPoints(client.getPoints() + pointsEarned);
 
-            clientRepository.save(client);
-            purchaseRepository.save(purchase);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error registering purchase: " + e.getMessage(), e);
-        }
+        clientRepository.save(client);
+        purchaseRepository.save(purchase);
     }
 
     private int calculatePoints(Integer valuePerPoints, BigDecimal purchaseValue) {
         return purchaseValue.divide(BigDecimal.valueOf(valuePerPoints), RoundingMode.HALF_DOWN).intValue();
     }
 }
-
