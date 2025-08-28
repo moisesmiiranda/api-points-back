@@ -14,7 +14,7 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Aplica a configuração a todos os endpoints
-                        .allowedOrigins("http://127.0.0.1:5173", "http://localhost:5173") // Permite requisições destas origens
+                        .allowedOrigins("http://127.0.0.1:8081", "http://localhost:8081") // Permite requisições destas origens
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Permite estes métodos HTTP
                         .allowedHeaders("*") // Permite todos os cabeçalhos
                         .allowCredentials(true); // Permite o envio de credenciais (como cookies)
