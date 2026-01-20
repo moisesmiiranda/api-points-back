@@ -20,12 +20,12 @@ public record ClientDto(
     }
 
     public static Client toEntity(ClientDto dto) {
-        Client client = new Client();
-        client.setName(dto.name());
-        client.setEmail(dto.email());
-        client.setPhone(dto.phone());
-        client.setCpf(dto.cpf());
-        client.setPoints(dto.points() != null ? dto.points() : 0);
-        return client;
+        return Client.builder()
+            .name(dto.name())
+            .email(dto.email())
+            .phone(dto.phone())
+            .cpf(dto.cpf())
+            .points(dto.points() != null ? dto.points() : 0)
+            .build();
     }
 }

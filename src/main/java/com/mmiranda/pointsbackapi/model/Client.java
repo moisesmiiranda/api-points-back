@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity
+@Builder
 public class Client {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
@@ -24,6 +26,7 @@ public class Client {
     @Column(unique = true)
     private String cpf;
 
+    @Builder.Default
     private Integer points = 0; // Default points to 0 if not provided
 
 }

@@ -18,8 +18,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 class PurchaseServiceTest {
 
@@ -40,14 +44,15 @@ class PurchaseServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    Client clientTest = buildClient();
+
     @Test
     void listAllPurchases() {
         // Arrange
-        Client client = new Client();
         Establishment establishment = new Establishment();
         Purchase purchase = new Purchase();
         purchase.setPurchaseId(1L);
-        purchase.setClient(client);
+        purchase.setClient(clientTest);
         purchase.setEstablishment(establishment);
         purchase.setAmount(new BigDecimal("100.00"));
 
@@ -65,17 +70,16 @@ class PurchaseServiceTest {
     void registerPurchase() {
         PurchaseDto purchaseDto = new PurchaseDto(1L, 1L, 1L, BigDecimal.valueOf(100));
         Establishment establishment = new Establishment();
-        establishment.setValuePerPoint(10);
-        Client client = new Client();
-        client.setPoints(50);
+        establishment.setValuePerPoint(10);        
+        clientTest.setPoints(50);
 
         when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishment));
-        when(clientRepository.findById(1L)).thenReturn(Optional.of(client));
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(clientTest));
 
         purchaseService.registerPurchase(purchaseDto);
 
-        assertEquals(60, client.getPoints());
-        verify(clientRepository, times(1)).save(client);
+        assertEquals(60, clientTest.getPoints());
+        verify(clientRepository, times(1)).save(clientTest);
         verify(purchaseRepository, times(1)).save(any(Purchase.class));
     }
 
@@ -98,5 +102,17 @@ class PurchaseServiceTest {
         when(clientRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> purchaseService.registerPurchase(purchaseDto));
+    }
+
+
+    public Client buildClient() {
+        return Client.builder()
+                .id(1L)
+                .name("Test Client")
+                .email("test@example.com")
+                .phone("1234567890")
+                .cpf("123.456.789-00")
+                .points(100)
+                .build();
     }
 }

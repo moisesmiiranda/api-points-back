@@ -20,9 +20,12 @@ public class ClientService {
                 .orElse(null);
     }
 
-    public Client createClient(ClientDto clientDto) {
-        Client client = ClientDto.toEntity(clientDto);
-        return clientRepository.save(client);
+    public ClientDto createClient(ClientDto clientDto) {
+        return ClientDto.toDto(
+            clientRepository.save(
+                ClientDto.toEntity(clientDto)
+            )
+        );
     }
 
     public List<Client> listAllClients() {
