@@ -14,6 +14,7 @@ public class ClientService {
     @Autowired
     private ClientRepository clientRepository;
 
+    @SuppressWarnings("null")
     public ClientDto getClientById(Long id) {
         return clientRepository.findById(id)
                 .map(ClientDto::toDto)
@@ -21,17 +22,20 @@ public class ClientService {
     }
 
     public ClientDto createClient(ClientDto clientDto) {
-        return ClientDto.toDto(
-            clientRepository.save(
-                ClientDto.toEntity(clientDto)
-            )
-        );
+        Client entity = ClientDto.toEntity(clientDto);
+        if (entity == null) {
+            return null;
+        }
+        return ClientDto.toDto(clientRepository.save(entity));
     }
 
-    public List<Client> listAllClients() {
-        return clientRepository.findAll();
+    public List<ClientDto> listAllClients() {
+        return clientRepository.findAll().stream()
+                .map(ClientDto::toDto)
+                .toList();
     }
 
+    @SuppressWarnings("null")
     public void addPoints(Long clientId, int points) {
         clientRepository.findById(clientId).ifPresent(client -> {
             int currentPoints = client.getPoints() != null ? client.getPoints() : 0;

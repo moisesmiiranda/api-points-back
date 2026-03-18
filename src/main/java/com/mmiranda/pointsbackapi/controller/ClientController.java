@@ -1,7 +1,6 @@
 package com.mmiranda.pointsbackapi.controller;
 
 import com.mmiranda.pointsbackapi.dto.ClientDto;
-import com.mmiranda.pointsbackapi.model.Client;
 import com.mmiranda.pointsbackapi.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +20,7 @@ public class ClientController {
     }
 
     @GetMapping("/all")
-    public List<Client> listAllClients() {
+    public List<ClientDto> listAllClients() {
         return clientService.listAllClients();
     }
 

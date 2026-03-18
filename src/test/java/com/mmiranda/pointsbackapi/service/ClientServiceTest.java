@@ -16,15 +16,20 @@ public class ClientServiceTest {
     @Mock
     private ClientRepository repository;
 
+    @Mock
+    private Client client;
+
     @InjectMocks
     private ClientService service;
 
     @BeforeEach
     void setUp() {
-        org.mockito.MockitoAnnotations.openMocks(this);        
+        org.mockito.MockitoAnnotations.openMocks(this);
+        clientTest = buildClient();
+        org.junit.jupiter.api.Assertions.assertNotNull(clientTest);
     }
 
-    Client clientTest = buildClient();
+    Client clientTest;
 
     @Test
     void testGetClientById() {
