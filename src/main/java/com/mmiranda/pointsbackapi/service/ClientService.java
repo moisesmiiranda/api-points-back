@@ -36,11 +36,15 @@ public class ClientService {
     }
 
     @SuppressWarnings("null")
-    public void addPoints(Long clientId, int points) {
-        clientRepository.findById(clientId).ifPresent(client -> {
-            int currentPoints = client.getPoints() != null ? client.getPoints() : 0;
-            client.setPoints(currentPoints + points);
-            clientRepository.save(client);
-        });
+    public boolean addPoints(Long clientId, int points) {
+        var client = clientRepository.findById(clientId);
+        if (client.isEmpty()) {
+            return false;
+        }
+        Client clientEntity = client.get();
+        int currentPoints = clientEntity.getPoints() != null ? clientEntity.getPoints() : 0;
+        clientEntity.setPoints(currentPoints + points);
+        clientRepository.save(clientEntity);
+        return true;
     }
 }

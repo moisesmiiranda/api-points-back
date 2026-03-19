@@ -139,9 +139,10 @@ public class ClientServiceTest {
         when(repository.save(any(Client.class))).thenReturn(clientTest);
 
         // Act
-        service.addPoints(clientId, pointsToAdd);
+        boolean result = service.addPoints(clientId, pointsToAdd);
 
         // Assert
+        assertEquals(true, result);
         assertEquals(150, clientTest.getPoints());
         verify(repository, times(1)).findById(clientId);
         verify(repository, times(1)).save(clientTest);
@@ -156,9 +157,10 @@ public class ClientServiceTest {
         when(repository.findById(clientId)).thenReturn(java.util.Optional.empty());
 
         // Act
-        service.addPoints(clientId, pointsToAdd);
+        boolean result = service.addPoints(clientId, pointsToAdd);
 
         // Assert
+        assertEquals(false, result);
         verify(repository, times(1)).findById(clientId);
         verify(repository, times(0)).save(any());
     }
@@ -174,9 +176,10 @@ public class ClientServiceTest {
         when(repository.save(any(Client.class))).thenReturn(clientTest);
 
         // Act
-        service.addPoints(clientId, pointsToAdd);
+        boolean result = service.addPoints(clientId, pointsToAdd);
 
         // Assert
+        assertEquals(true, result);
         assertEquals(50, clientTest.getPoints());
         verify(repository, times(1)).findById(clientId);
         verify(repository, times(1)).save(clientTest);

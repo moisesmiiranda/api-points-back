@@ -29,4 +29,9 @@ public class ClientController {
         return clientService.getClientById(id);
     }
 
+    @PutMapping("/{id}/points")
+    public boolean updateClientPoints(@PathVariable Long id, @RequestParam int points) {
+        return clientService.addPoints(id, points);
+    }
+
 }
