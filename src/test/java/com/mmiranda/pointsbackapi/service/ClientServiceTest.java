@@ -17,6 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+
 @ExtendWith(MockitoExtension.class)
 public class ClientServiceTest {
 
@@ -82,6 +88,99 @@ public class ClientServiceTest {
         assertEquals("test@example.com", result.email());
     }
 
+    @Test
+    void testCreateClientWithNullEntity() {
+        // Arrange
+        ClientDto clientDto = new ClientDto(null, null, null, null, null);
+
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
+
+        // Act
+        ClientDto result = service.createClient(clientDto);
+
+        // Assert
+        assertNotNull(result);
+        verify(repository, times(1)).save(any(Client.class));
+    }
+
+    @Test
+    void testListAllClients() {
+        // Arrange
+        Client client2 = Client.builder()
+                .id(2L)
+                .name("Test Client 2")
+                .email("test2@example.com")
+                .phone("0987654321")
+                .cpf("987.654.321-00")
+                .points(200)
+                .build();
+
+        when(repository.findAll()).thenReturn(Arrays.asList(clientTest, client2));
+
+        // Act
+        List<ClientDto> result = service.listAllClients();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Test Client", result.get(0).name());
+        assertEquals("Test Client 2", result.get(1).name());
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testAddPoints() {
+        // Arrange
+        Long clientId = 1L;
+        int pointsToAdd = 50;
+        clientTest.setPoints(100);
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.of(clientTest));
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
+
+        // Act
+        service.addPoints(clientId, pointsToAdd);
+
+        // Assert
+        assertEquals(150, clientTest.getPoints());
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(1)).save(clientTest);
+    }
+
+    @Test
+    void testAddPointsClientNotFound() {
+        // Arrange
+        Long clientId = 999L;
+        int pointsToAdd = 50;
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.empty());
+
+        // Act
+        service.addPoints(clientId, pointsToAdd);
+
+        // Assert
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(0)).save(any());
+    }
+
+    @Test
+    void testAddPointsWithNullCurrentPoints() {
+        // Arrange
+        Long clientId = 1L;
+        int pointsToAdd = 50;
+        clientTest.setPoints(null);
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.of(clientTest));
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
+
+        // Act
+        service.addPoints(clientId, pointsToAdd);
+
+        // Assert
+        assertEquals(50, clientTest.getPoints());
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(1)).save(clientTest);
+    }
 
     public Client buildClient() {
         return Client.builder()
