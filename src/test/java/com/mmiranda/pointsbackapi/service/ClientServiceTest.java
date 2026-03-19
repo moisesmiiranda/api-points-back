@@ -1,35 +1,39 @@
 package com.mmiranda.pointsbackapi.service;
 
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.mmiranda.pointsbackapi.dto.ClientDto;
 import com.mmiranda.pointsbackapi.model.Client;
 import com.mmiranda.pointsbackapi.repository.ClientRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+@ExtendWith(MockitoExtension.class)
 public class ClientServiceTest {
 
     @Mock
     private ClientRepository repository;
 
-    @Mock
-    private Client client;
-
     @InjectMocks
     private ClientService service;
 
+    private Client clientTest;
+
     @BeforeEach
     void setUp() {
-        org.mockito.MockitoAnnotations.openMocks(this);
         clientTest = buildClient();
-        org.junit.jupiter.api.Assertions.assertNotNull(clientTest);
+        assertNotNull(clientTest);
     }
 
-    Client clientTest;
 
     @Test
     void testGetClientById() {
@@ -44,10 +48,9 @@ public class ClientServiceTest {
         ClientDto result = service.getClientById(clientId);
 
         // Assert
-        assert result != null;
-        assert result.name().equals("Test Client");
-        assert result.email().equals("test@example.com");
-
+        assertNotNull(result);
+        assertEquals("Test Client", result.name());
+        assertEquals("test@example.com", result.email());
     }
 
     @Test
@@ -61,23 +64,22 @@ public class ClientServiceTest {
         ClientDto result = service.getClientById(clientId);
 
         // Assert
-        assert result == null;
-
+        assertNull(result);
     }
 
     @Test
     void testCreateClient() {
         // Arrange       
         ClientDto clientDto = ClientDto.toDto(clientTest);
-        when(repository.save(clientTest)).thenReturn(clientTest);
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
 
         // Act
         ClientDto result = service.createClient(clientDto);
 
         // Assert
-        assert result != null;
-        assert result.name().equals("Test Client");
-        assert result.email().equals("test@example.com");
+        assertNotNull(result);
+        assertEquals("Test Client", result.name());
+        assertEquals("test@example.com", result.email());
     }
 
 
