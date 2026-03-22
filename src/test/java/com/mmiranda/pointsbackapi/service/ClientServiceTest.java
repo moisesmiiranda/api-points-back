@@ -185,6 +185,77 @@ public class ClientServiceTest {
         verify(repository, times(1)).save(clientTest);
     }
 
+    @Test
+    void testUpdateClientAllFields() {
+        // Arrange
+        Long clientId = 1L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Client",
+                "updated@example.com",
+                "9999999999",
+                "999.999.999-99",
+                500
+        );
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.of(clientTest));
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
+
+        // Act
+        ClientDto result = service.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNotNull(result);
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(1)).save(any(Client.class));
+    }
+
+    @Test
+    void testUpdateClientPartialFields() {
+        // Arrange
+        Long clientId = 1L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Client",
+                null,
+                null,
+                null,
+                null
+        );
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.of(clientTest));
+        when(repository.save(any(Client.class))).thenReturn(clientTest);
+
+        // Act
+        ClientDto result = service.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNotNull(result);
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(1)).save(any(Client.class));
+    }
+
+    @Test
+    void testUpdateClientNotFound() {
+        // Arrange
+        Long clientId = 999L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Client",
+                "updated@example.com",
+                "9999999999",
+                "999.999.999-99",
+                500
+        );
+
+        when(repository.findById(clientId)).thenReturn(java.util.Optional.empty());
+
+        // Act
+        ClientDto result = service.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNull(result);
+        verify(repository, times(1)).findById(clientId);
+        verify(repository, times(0)).save(any());
+    }
+
     public Client buildClient() {
         return Client.builder()
                 .id(1L)

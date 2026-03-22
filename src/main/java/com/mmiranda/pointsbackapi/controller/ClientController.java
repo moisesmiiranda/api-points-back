@@ -34,4 +34,9 @@ public class ClientController {
         return clientService.addPoints(id, points);
     }
 
+    @PutMapping("/{id}")
+    public ClientDto updateClient(@PathVariable Long id, @RequestBody ClientDto clientDto) {
+        return clientService.updateClient(id, clientDto);
+    }
+
 }

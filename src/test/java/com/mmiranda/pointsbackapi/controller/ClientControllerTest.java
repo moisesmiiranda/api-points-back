@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -126,6 +127,86 @@ class ClientControllerTest {
         verify(clientService, times(1)).addPoints(clientId, pointsToAdd);
     }
 
+    @Test
+    void testUpdateClient() {
+        // Arrange
+        Long clientId = 1L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Client",
+                "updated@example.com",
+                "9999999999",
+                "999.999.999-99",
+                500
+        );
+
+        when(clientService.updateClient(clientId, updateDto))
+                .thenReturn(updateDto);
+
+        // Act
+        ClientDto result = clientController.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Updated Client", result.name());
+        assertEquals("updated@example.com", result.email());
+        verify(clientService, times(1)).updateClient(clientId, updateDto);
+    }
+
+    @Test
+    void testUpdateClientPartial() {
+        // Arrange
+        Long clientId = 1L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Name",
+                null,
+                null,
+                null,
+                null
+        );
+
+        ClientDto responseDto = new ClientDto(
+                "Updated Name",
+                "test@example.com",
+                "1234567890",
+                "123.456.789-00",
+                100
+        );
+
+        when(clientService.updateClient(clientId, updateDto))
+                .thenReturn(responseDto);
+
+        // Act
+        ClientDto result = clientController.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Updated Name", result.name());
+        verify(clientService, times(1)).updateClient(clientId, updateDto);
+    }
+
+    @Test
+    void testUpdateClientNotFound() {
+        // Arrange
+        Long clientId = 999L;
+        ClientDto updateDto = new ClientDto(
+                "Updated Client",
+                "updated@example.com",
+                "9999999999",
+                "999.999.999-99",
+                500
+        );
+
+        when(clientService.updateClient(clientId, updateDto))
+                .thenReturn(null);
+
+        // Act
+        ClientDto result = clientController.updateClient(clientId, updateDto);
+
+        // Assert
+        assertNull(result);
+        verify(clientService, times(1)).updateClient(clientId, updateDto);
+    }
+
     private ClientDto buildClientDto() {
         return new ClientDto(
                 "Test Client",
@@ -147,4 +228,3 @@ class ClientControllerTest {
                 .build();
     }
 }
-

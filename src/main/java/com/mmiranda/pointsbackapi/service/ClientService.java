@@ -47,4 +47,33 @@ public class ClientService {
         clientRepository.save(clientEntity);
         return true;
     }
+
+    @SuppressWarnings("null")
+    public ClientDto updateClient(Long clientId, ClientDto clientDto) {
+        var client = clientRepository.findById(clientId);
+        if (client.isEmpty()) {
+            return null;
+        }
+
+        Client clientEntity = client.get();
+
+        // Update only non-null fields
+        if (clientDto.name() != null) {
+            clientEntity.setName(clientDto.name());
+        }
+        if (clientDto.email() != null) {
+            clientEntity.setEmail(clientDto.email());
+        }
+        if (clientDto.phone() != null) {
+            clientEntity.setPhone(clientDto.phone());
+        }
+        if (clientDto.cpf() != null) {
+            clientEntity.setCpf(clientDto.cpf());
+        }
+        if (clientDto.points() != null) {
+            clientEntity.setPoints(clientDto.points());
+        }
+
+        return ClientDto.toDto(clientRepository.save(clientEntity));
+    }
 }
