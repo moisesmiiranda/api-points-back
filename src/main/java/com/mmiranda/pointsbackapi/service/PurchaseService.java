@@ -54,4 +54,38 @@ public class PurchaseService {
     private int calculatePoints(Integer valuePerPoints, BigDecimal purchaseValue) {
         return purchaseValue.divide(BigDecimal.valueOf(valuePerPoints), RoundingMode.HALF_DOWN).intValue();
     }
+
+    public PurchaseDto updatePurchaseById(Long purchaseId, PurchaseDto purchaseDto) {
+        var purchase = purchaseRepository.findById(purchaseId);
+        
+        if (purchase.isEmpty()) {
+            return null;
+        }
+
+        Purchase purchaseEntity = purchase.get();
+
+        // Update only non-null fields
+        if (purchaseDto.clientId() != null) {
+            var client = clientRepository.findById(purchaseDto.clientId());
+            if (client.isEmpty()) {
+                return null;
+            }
+            purchaseEntity.setClient(client.get());
+        }
+
+        if (purchaseDto.establishmentId() != null) {
+            var establishment = establishmentRepository.findById(purchaseDto.establishmentId());
+            if (establishment.isEmpty()) {
+                return null;
+            }
+            purchaseEntity.setEstablishment(establishment.get());
+        }
+
+        if (purchaseDto.amount() != null) {
+            purchaseEntity.setAmount(purchaseDto.amount());
+        }
+
+        Purchase updatedPurchase = purchaseRepository.save(purchaseEntity);
+        return PurchaseDto.toDto(updatedPurchase);
+    }
 }

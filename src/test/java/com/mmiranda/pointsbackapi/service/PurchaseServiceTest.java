@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 class PurchaseServiceTest {
 
@@ -104,6 +105,300 @@ class PurchaseServiceTest {
         assertThrows(RuntimeException.class, () -> purchaseService.registerPurchase(purchaseDto));
     }
 
+    @Test
+    void updatePurchaseById_Success() {
+        // Arrange
+        Long purchaseId = 1L;
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            null,
+            null,
+            BigDecimal.valueOf(150.00)
+        );
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+        establishment.setValuePerPoint(10);
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(establishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        Purchase updatedPurchase = new Purchase();
+        updatedPurchase.setPurchaseId(1L);
+        updatedPurchase.setClient(clientTest);
+        updatedPurchase.setEstablishment(establishment);
+        updatedPurchase.setAmount(BigDecimal.valueOf(150.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(purchaseRepository.save(any(Purchase.class)))
+                .thenReturn(updatedPurchase);
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(BigDecimal.valueOf(150.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_PurchaseNotFound() {
+        // Arrange
+        Long purchaseId = 999L;
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            null,
+            null,
+            BigDecimal.valueOf(150.00)
+        );
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.empty());
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(null, result);
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_UpdateAmount() {
+        // Arrange
+        Long purchaseId = 1L;
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            null,
+            null,
+            BigDecimal.valueOf(200.00)
+        );
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(establishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        Purchase updatedPurchase = new Purchase();
+        updatedPurchase.setPurchaseId(1L);
+        updatedPurchase.setClient(clientTest);
+        updatedPurchase.setEstablishment(establishment);
+        updatedPurchase.setAmount(BigDecimal.valueOf(200.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(purchaseRepository.save(any(Purchase.class)))
+                .thenReturn(updatedPurchase);
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(BigDecimal.valueOf(200.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_UpdateClientAndEstablishment() {
+        // Arrange
+        Long purchaseId = 1L;
+        
+        Client newClient = Client.builder()
+                .id(2L)
+                .name("New Client")
+                .email("new@example.com")
+                .phone("9876543210")
+                .cpf("987.654.321-00")
+                .points(50)
+                .build();
+
+        Establishment oldEstablishment = new Establishment();
+        oldEstablishment.setId(1L);
+
+        Establishment newEstablishment = new Establishment();
+        newEstablishment.setId(2L);
+
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            2L,
+            2L,
+            null
+        );
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(oldEstablishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        Purchase updatedPurchase = new Purchase();
+        updatedPurchase.setPurchaseId(1L);
+        updatedPurchase.setClient(newClient);
+        updatedPurchase.setEstablishment(newEstablishment);
+        updatedPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(clientRepository.findById(2L))
+                .thenReturn(Optional.of(newClient));
+        when(establishmentRepository.findById(2L))
+                .thenReturn(Optional.of(newEstablishment));
+        when(purchaseRepository.save(any(Purchase.class)))
+                .thenReturn(updatedPurchase);
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(2L, result.clientId());
+        assertEquals(2L, result.establishmentId());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(clientRepository, times(1)).findById(2L);
+        verify(establishmentRepository, times(1)).findById(2L);
+        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_UpdateClientNotFound() {
+        // Arrange
+        Long purchaseId = 1L;
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            999L,
+            null,
+            null
+        );
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(establishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(clientRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(null, result);
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(clientRepository, times(1)).findById(999L);
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_UpdateEstablishmentNotFound() {
+        // Arrange
+        Long purchaseId = 1L;
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            null,
+            999L,
+            null
+        );
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(establishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(establishmentRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(null, result);
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(establishmentRepository, times(1)).findById(999L);
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+    }
+
+    @Test
+    void updatePurchaseById_UpdateAllFields() {
+        // Arrange
+        Long purchaseId = 1L;
+        
+        Client newClient = Client.builder()
+                .id(2L)
+                .name("New Client")
+                .email("new@example.com")
+                .phone("9876543210")
+                .cpf("987.654.321-00")
+                .points(50)
+                .build();
+
+        Establishment oldEstablishment = new Establishment();
+        oldEstablishment.setId(1L);
+
+        Establishment newEstablishment = new Establishment();
+        newEstablishment.setId(2L);
+
+        PurchaseDto updateDto = new PurchaseDto(
+            null,
+            2L,
+            2L,
+            BigDecimal.valueOf(300.00)
+        );
+
+        Purchase existingPurchase = new Purchase();
+        existingPurchase.setPurchaseId(1L);
+        existingPurchase.setClient(clientTest);
+        existingPurchase.setEstablishment(oldEstablishment);
+        existingPurchase.setAmount(BigDecimal.valueOf(100.00));
+
+        Purchase updatedPurchase = new Purchase();
+        updatedPurchase.setPurchaseId(1L);
+        updatedPurchase.setClient(newClient);
+        updatedPurchase.setEstablishment(newEstablishment);
+        updatedPurchase.setAmount(BigDecimal.valueOf(300.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(existingPurchase));
+        when(clientRepository.findById(2L))
+                .thenReturn(Optional.of(newClient));
+        when(establishmentRepository.findById(2L))
+                .thenReturn(Optional.of(newEstablishment));
+        when(purchaseRepository.save(any(Purchase.class)))
+                .thenReturn(updatedPurchase);
+
+        // Act
+        PurchaseDto result = purchaseService.updatePurchaseById(purchaseId, updateDto);
+
+        // Assert
+        assertEquals(2L, result.clientId());
+        assertEquals(2L, result.establishmentId());
+        assertEquals(BigDecimal.valueOf(300.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+        verify(clientRepository, times(1)).findById(2L);
+        verify(establishmentRepository, times(1)).findById(2L);
+        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
 
     public Client buildClient() {
         return Client.builder()
