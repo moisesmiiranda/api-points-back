@@ -28,5 +28,34 @@ public class EstablishmentService {
     public List<Establishment> listAllEstablishments() {
         return establishmentRepository.findAll();
     }
+
+    @SuppressWarnings("null")
+    public EstablishmentDto updateEstablishmentById(Long establishmentId, EstablishmentDto establishmentDto) {
+        var establishment = establishmentRepository.findById(establishmentId);
+        if (establishment.isEmpty()) {
+            return null;
+        }
+
+        Establishment establishmentEntity = establishment.get();
+
+        // Update only non-null fields
+        if (establishmentDto.name() != null) {
+            establishmentEntity.setName(establishmentDto.name());
+        }
+        if (establishmentDto.email() != null) {
+            establishmentEntity.setEmail(establishmentDto.email());
+        }
+        if (establishmentDto.phone() != null) {
+            establishmentEntity.setPhone(establishmentDto.phone());
+        }
+        if (establishmentDto.cnpj() != null) {
+            establishmentEntity.setCnpj(establishmentDto.cnpj());
+        }
+        if (establishmentDto.valuePerPoint() != null) {
+            establishmentEntity.setValuePerPoint(establishmentDto.valuePerPoint());
+        }
+
+        return EstablishmentDto.toDto(establishmentRepository.save(establishmentEntity));
+    }
 }
 
