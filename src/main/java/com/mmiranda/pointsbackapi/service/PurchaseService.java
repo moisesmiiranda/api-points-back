@@ -29,6 +29,13 @@ public class PurchaseService {
                 .toList();
     }
 
+    public PurchaseDto getPurchaseById(long id) {
+        return purchaseRepository.findById(id)
+                .map(PurchaseDto::toDto)
+                .orElse(null);
+    }
+
+
     public void registerPurchase(PurchaseDto purchaseDto) {
 
         var establishment = establishmentRepository

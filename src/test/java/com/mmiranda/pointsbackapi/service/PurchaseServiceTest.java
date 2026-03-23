@@ -18,8 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -40,9 +39,12 @@ class PurchaseServiceTest {
     @InjectMocks
     private PurchaseService purchaseService;
 
+    private Purchase purchaseTest;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        purchaseTest = buildPurchase();
     }
 
     Client clientTest = buildClient();
@@ -103,6 +105,107 @@ class PurchaseServiceTest {
         when(clientRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> purchaseService.registerPurchase(purchaseDto));
+    }
+
+    @Test
+    void testGetPurchaseById() {
+      // Arrange
+        Long purchaseId = 1L;
+
+        when(purchaseRepository.findById(purchaseId)).thenReturn(Optional.of(purchaseTest));
+
+        // Act
+        PurchaseDto result = purchaseService.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(BigDecimal.valueOf(150.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+    }
+
+    @Test
+    void testGetPurchaseByIdNotFound() {
+        // Arrange
+        Long purchaseId = 999L;
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.empty());
+
+        // Act
+        PurchaseDto result = purchaseService.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNull(result);
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+    }
+
+    @Test
+    void testGetPurchaseByIdWithValidData() {
+        // Arrange
+        Long purchaseId = 1L;
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+        establishment.setName("Test Establishment");
+
+        Purchase expectedPurchase = new Purchase();
+        expectedPurchase.setPurchaseId(1L);
+        expectedPurchase.setClient(clientTest);
+        expectedPurchase.setEstablishment(establishment);
+        expectedPurchase.setAmount(BigDecimal.valueOf(250.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(expectedPurchase));
+
+        // Act
+        PurchaseDto result = purchaseService.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.purchaseId());
+        assertEquals(1L, result.clientId());
+        assertEquals(1L, result.establishmentId());
+        assertEquals(BigDecimal.valueOf(250.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
+    }
+
+    @Test
+    void testGetPurchaseByIdWithDifferentPurchaseId() {
+        // Arrange
+        Long purchaseId = 5L;
+
+        Client differentClient = Client.builder()
+                .id(3L)
+                .name("Different Client")
+                .email("different@example.com")
+                .phone("5555555555")
+                .cpf("555.555.555-55")
+                .points(200)
+                .build();
+
+        Establishment differentEstablishment = new Establishment();
+        differentEstablishment.setId(3L);
+        differentEstablishment.setName("Different Establishment");
+
+        Purchase expectedPurchase = new Purchase();
+        expectedPurchase.setPurchaseId(5L);
+        expectedPurchase.setClient(differentClient);
+        expectedPurchase.setEstablishment(differentEstablishment);
+        expectedPurchase.setAmount(BigDecimal.valueOf(500.00));
+
+        when(purchaseRepository.findById(purchaseId))
+                .thenReturn(Optional.of(expectedPurchase));
+
+        // Act
+        PurchaseDto result = purchaseService.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(5L, result.purchaseId());
+        assertEquals(3L, result.clientId());
+        assertEquals(3L, result.establishmentId());
+        assertEquals(BigDecimal.valueOf(500.00), result.amount());
+        verify(purchaseRepository, times(1)).findById(purchaseId);
     }
 
     @Test
@@ -409,5 +512,19 @@ class PurchaseServiceTest {
                 .cpf("123.456.789-00")
                 .points(100)
                 .build();
+    }
+
+    public Purchase buildPurchase() {
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+        establishment.setName("Test Establishment");
+        establishment.setValuePerPoint(10);
+
+        Purchase purchase = new Purchase();
+        purchase.setPurchaseId(1L);
+        purchase.setClient(buildClient());
+        purchase.setEstablishment(establishment);
+        purchase.setAmount(BigDecimal.valueOf(150.00));
+        return purchase;
     }
 }

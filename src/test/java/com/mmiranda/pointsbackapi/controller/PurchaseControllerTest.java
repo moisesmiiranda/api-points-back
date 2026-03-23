@@ -149,5 +149,66 @@ class PurchaseControllerTest {
         verify(purchaseService, times(1)).updatePurchaseById(eq(purchaseId), any(PurchaseDto.class));
     }
 
-}
+    @Test
+    void testGetPurchaseById() {
+        // Arrange
+        Long purchaseId = 1L;
 
+        when(purchaseService.getPurchaseById(purchaseId))
+                .thenReturn(purchaseDto);
+
+        // Act
+        PurchaseDto result = purchaseController.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.purchaseId());
+        assertEquals(1L, result.clientId());
+        assertEquals(1L, result.establishmentId());
+        assertEquals(BigDecimal.valueOf(100.00), result.amount());
+        verify(purchaseService, times(1)).getPurchaseById(purchaseId);
+    }
+
+    @Test
+    void testGetPurchaseByIdNotFound() {
+        // Arrange
+        Long purchaseId = 999L;
+
+        when(purchaseService.getPurchaseById(purchaseId))
+                .thenReturn(null);
+
+        // Act
+        PurchaseDto result = purchaseController.getPurchaseById(purchaseId);
+
+        // Assert
+        assertEquals(null, result);
+        verify(purchaseService, times(1)).getPurchaseById(purchaseId);
+    }
+
+    @Test
+    void testGetPurchaseByIdWithDifferentValues() {
+        // Arrange
+        Long purchaseId = 2L;
+        PurchaseDto expectedPurchase = new PurchaseDto(
+            2L,
+            2L,
+            2L,
+            BigDecimal.valueOf(250.00)
+        );
+
+        when(purchaseService.getPurchaseById(purchaseId))
+                .thenReturn(expectedPurchase);
+
+        // Act
+        PurchaseDto result = purchaseController.getPurchaseById(purchaseId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2L, result.purchaseId());
+        assertEquals(2L, result.clientId());
+        assertEquals(2L, result.establishmentId());
+        assertEquals(BigDecimal.valueOf(250.00), result.amount());
+        verify(purchaseService, times(1)).getPurchaseById(purchaseId);
+    }
+
+}

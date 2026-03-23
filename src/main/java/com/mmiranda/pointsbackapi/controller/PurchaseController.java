@@ -28,6 +28,10 @@ public class PurchaseController {
         return purchaseService.listAllPurchases();
     }
 
+    @GetMapping("/{id}")
+    public PurchaseDto getPurchaseById(@PathVariable Long id) {
+        return purchaseService.getPurchaseById(id);
+    }
     @PutMapping("/{id}")
     public PurchaseDto updatePurchaseById(@PathVariable Long id, @RequestBody PurchaseDto purchaseDto) {
         return purchaseService.updatePurchaseById(id, purchaseDto);
