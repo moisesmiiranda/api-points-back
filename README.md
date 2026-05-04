@@ -2,6 +2,62 @@
 
 API para gerenciamento de clientes e estabelecimentos.
 
+## 📋 Índice
+
+- [Quick Start](#-quick-start)
+- [MCP Server](#-mcp-server)
+- [Clonando o repositório](#-clonando-o-repositório)
+- [Buildando a aplicação](#-buildando-a-aplicação)
+- [Endpoints disponíveis](#-endpoints-disponíveis)
+- [Tecnologias utilizadas](#-tecnologias-utilizadas)
+
+## 🚀 Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/moisesmiiranda/api-points-back.git
+cd api-points-back
+chmod +x gradlew
+
+# Build
+./gradlew build
+
+# Run
+./gradlew bootRun
+```
+
+The API will be available at `http://localhost:8080`
+
+## 🤖 MCP Server
+
+This project includes a **Model Context Protocol (MCP)** server that allows AI assistants like Claude to interact with your API through natural language commands.
+
+### Quick Test
+
+```bash
+# Check MCP server status
+curl http://localhost:8080/mcp/health
+
+# List all available tools
+curl -X POST http://localhost:8080/mcp/rpc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "tools/list",
+    "params": {}
+  }'
+```
+
+### Available MCP Tools
+
+The MCP server exposes 13 tools for:
+- **Client Management**: list, get, create, update clients & manage points
+- **Establishment Management**: list, get, create, update establishments  
+- **Purchase Management**: list, get, create, update purchases
+
+**For detailed MCP documentation, see [MCP_QUICKSTART.md](MCP_QUICKSTART.md) and [MCP_SERVER.md](MCP_SERVER.md)**
+
 ## 📥 Clonando o repositório
 
 ```bash
