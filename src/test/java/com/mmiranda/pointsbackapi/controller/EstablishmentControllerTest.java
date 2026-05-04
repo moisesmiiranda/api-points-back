@@ -28,9 +28,11 @@ class EstablishmentControllerTest {
 
     private EstablishmentDto establishmentDto;
 
+    private Long establishmentId = 1L;
     @BeforeEach
     void setUp() {
         establishmentDto = new EstablishmentDto(
+                establishmentId,
             "Test Establishment",
             "test@example.com",
             "1234567890",
@@ -44,6 +46,7 @@ class EstablishmentControllerTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
@@ -69,6 +72,7 @@ class EstablishmentControllerTest {
         // Arrange
         Long establishmentId = 999L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
@@ -92,6 +96,7 @@ class EstablishmentControllerTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Name",
             null,
             null,
@@ -100,6 +105,7 @@ class EstablishmentControllerTest {
         );
 
         EstablishmentDto expectedResult = new EstablishmentDto(
+                establishmentId,
             "Updated Name",
             "test@example.com",
             "1234567890",
@@ -125,6 +131,7 @@ class EstablishmentControllerTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+            establishmentId,
             null,
             null,
             null,
@@ -133,6 +140,8 @@ class EstablishmentControllerTest {
         );
 
         EstablishmentDto expectedResult = new EstablishmentDto(
+
+            establishmentId,
             "Test Establishment",
             "test@example.com",
             "1234567890",
@@ -158,6 +167,7 @@ class EstablishmentControllerTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "newemail@example.com",
             "8888888888",
@@ -166,6 +176,7 @@ class EstablishmentControllerTest {
         );
 
         EstablishmentDto expectedResult = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "newemail@example.com",
             "8888888888",

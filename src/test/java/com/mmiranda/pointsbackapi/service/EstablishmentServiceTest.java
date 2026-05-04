@@ -118,6 +118,7 @@ class EstablishmentServiceTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
@@ -155,6 +156,7 @@ class EstablishmentServiceTest {
         // Arrange
         Long establishmentId = 999L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
@@ -179,6 +181,7 @@ class EstablishmentServiceTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+                establishmentId,
             "Updated Name",
             null,
             null,
@@ -214,6 +217,7 @@ class EstablishmentServiceTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+            establishmentId,
             null,
             null,
             null,
@@ -250,6 +254,7 @@ class EstablishmentServiceTest {
         // Arrange
         Long establishmentId = 1L;
         EstablishmentDto updateDto = new EstablishmentDto(
+            establishmentId,
             "Updated Establishment",
             "newemail@example.com",
             "8888888888",

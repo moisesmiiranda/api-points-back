@@ -71,6 +71,7 @@ class ClientControllerIntegrationTest {
 
         when(clientService.updateClient(eq(clientId), any()))
                 .thenReturn(new com.mmiranda.pointsbackapi.dto.ClientDto(
+                        clientId,
                         "Updated Client",
                         "updated@example.com",
                         "9999999999",
@@ -125,6 +126,7 @@ class ClientControllerIntegrationTest {
 
         when(clientService.updateClient(eq(clientId), any()))
                 .thenReturn(new com.mmiranda.pointsbackapi.dto.ClientDto(
+                        clientId,
                         "Updated Name",
                         "test@example.com",
                         "1234567890",
