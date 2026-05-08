@@ -64,6 +64,7 @@ public class McpToolExecutor {
 
     private ClientDto extractClientDto(Map<String, Object> params) {
         return new ClientDto(
+            (Long) params.get("id"),
             (String) params.get("name"),
             (String) params.get("email"),
             (String) params.get("phone"),
@@ -74,6 +75,7 @@ public class McpToolExecutor {
 
     private EstablishmentDto extractEstablishmentDto(Map<String, Object> params) {
         return new EstablishmentDto(
+            (Long) params.get("id"),
             (String) params.get("name"),
             (String) params.get("email"),
             (String) params.get("phone"),
