@@ -58,7 +58,8 @@ class ClientControllerTest {
     @Test
     void testListAllClients() {
         // Arrange
-        ClientDto clientDto2 = new ClientDto("Test Client 2", "test2@example.com", 
+        Long clientId = 1L;
+        ClientDto clientDto2 = new ClientDto(clientId,"Test Client 2", "test2@example.com",
                 "0987654321", "987.654.321-00", 200);
 
         when(clientService.listAllClients())
@@ -132,6 +133,7 @@ class ClientControllerTest {
         // Arrange
         Long clientId = 1L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",
@@ -157,6 +159,7 @@ class ClientControllerTest {
         // Arrange
         Long clientId = 1L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Name",
                 null,
                 null,
@@ -165,6 +168,7 @@ class ClientControllerTest {
         );
 
         ClientDto responseDto = new ClientDto(
+                clientId,
                 "Updated Name",
                 "test@example.com",
                 "1234567890",
@@ -189,6 +193,7 @@ class ClientControllerTest {
         // Arrange
         Long clientId = 999L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",
@@ -208,7 +213,9 @@ class ClientControllerTest {
     }
 
     private ClientDto buildClientDto() {
+        Long clientId = 1L;
         return new ClientDto(
+                clientId,
                 "Test Client",
                 "test@example.com",
                 "1234567890",

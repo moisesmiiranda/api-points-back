@@ -91,7 +91,8 @@ public class ClientServiceTest {
     @Test
     void testCreateClientWithNullEntity() {
         // Arrange
-        ClientDto clientDto = new ClientDto(null, null, null, null, null);
+        Long clientId = 1L;
+        ClientDto clientDto = new ClientDto(clientId,null, null, null, null, null);
 
         when(repository.save(any(Client.class))).thenReturn(clientTest);
 
@@ -190,6 +191,7 @@ public class ClientServiceTest {
         // Arrange
         Long clientId = 1L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",
@@ -214,6 +216,7 @@ public class ClientServiceTest {
         // Arrange
         Long clientId = 1L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Client",
                 null,
                 null,
@@ -238,6 +241,7 @@ public class ClientServiceTest {
         // Arrange
         Long clientId = 999L;
         ClientDto updateDto = new ClientDto(
+                clientId,
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",

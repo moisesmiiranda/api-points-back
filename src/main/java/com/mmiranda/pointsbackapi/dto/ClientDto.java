@@ -3,6 +3,7 @@ package com.mmiranda.pointsbackapi.dto;
 import com.mmiranda.pointsbackapi.model.Client;
 
 public record ClientDto(
+        Long id,
         String name,
         String email,
         String phone,
@@ -11,6 +12,7 @@ public record ClientDto(
 ) {
     public static ClientDto toDto(Client client) {
         return new ClientDto(
+            client.getId(),
             client.getName(),
             client.getEmail(),
             client.getPhone(),
@@ -21,6 +23,7 @@ public record ClientDto(
 
     public static Client toEntity(ClientDto dto) {
         return Client.builder()
+            .id(dto.id())
             .name(dto.name())
             .email(dto.email())
             .phone(dto.phone())
