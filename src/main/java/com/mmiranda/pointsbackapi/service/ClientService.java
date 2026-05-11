@@ -1,6 +1,7 @@
 package com.mmiranda.pointsbackapi.service;
 
 import com.mmiranda.pointsbackapi.dto.ClientDto;
+import com.mmiranda.pointsbackapi.exception.DuplicateCpfException;
 import com.mmiranda.pointsbackapi.model.Client;
 import com.mmiranda.pointsbackapi.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,10 @@ public class ClientService {
     }
 
     public ClientDto createClient(ClientDto clientDto) {
+        if (clientDto.cpf() != null && clientRepository.existsByCpf(clientDto.cpf())) {
+            throw new DuplicateCpfException(clientDto.cpf());
+        }
+        
         Client entity = ClientDto.toEntity(clientDto);
         if (entity == null) {
             return null;
