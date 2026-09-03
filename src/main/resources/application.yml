@@ -3,3 +3,15 @@ spring:
     port: 8081
   application:
     name: pointsbackapi
+
+# JWT signing/expiration. Override JWT_SECRET in every non-local environment.
+jwt:
+  secret: ${JWT_SECRET:dev-only-insecure-secret-key-please-override-in-prod-1234567890}
+  expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+
+# Bootstrap PLATFORM_ADMIN account created on first startup if it doesn't already exist.
+# Override both via env vars in every non-local environment.
+admin:
+  bootstrap:
+    email: ${ADMIN_EMAIL:admin@pointsback.local}
+    password: ${ADMIN_PASSWORD:ChangeMe123!}

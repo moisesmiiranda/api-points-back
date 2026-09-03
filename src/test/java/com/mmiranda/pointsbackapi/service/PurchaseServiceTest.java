@@ -1,12 +1,15 @@
 package com.mmiranda.pointsbackapi.service;
 
 import com.mmiranda.pointsbackapi.dto.PurchaseDto;
+import com.mmiranda.pointsbackapi.exception.ForbiddenException;
 import com.mmiranda.pointsbackapi.model.Client;
 import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.model.Purchase;
 import com.mmiranda.pointsbackapi.repository.ClientRepository;
 import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
 import com.mmiranda.pointsbackapi.repository.PurchaseRepository;
+import com.mmiranda.pointsbackapi.security.TestAuth;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -45,6 +48,12 @@ class PurchaseServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         purchaseTest = buildPurchase();
+        TestAuth.asPlatformAdmin();
+    }
+
+    @AfterEach
+    void tearDown() {
+        TestAuth.clear();
     }
 
     Client clientTest = buildClient();
@@ -70,11 +79,30 @@ class PurchaseServiceTest {
     }
 
     @Test
+    void listAllPurchasesScopedForNonAdmin() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentOwner(1L);
+
+        when(purchaseRepository.findAllByEstablishmentId(1L)).thenReturn(Collections.singletonList(purchaseTest));
+
+        // Act
+        List<PurchaseDto> result = purchaseService.listAllPurchases();
+
+        // Assert
+        assertEquals(1, result.size());
+        verify(purchaseRepository, times(1)).findAllByEstablishmentId(1L);
+        verify(purchaseRepository, never()).findAll();
+    }
+
+    @Test
     void registerPurchase() {
         PurchaseDto purchaseDto = new PurchaseDto(1L, 1L, 1L, BigDecimal.valueOf(100));
         Establishment establishment = new Establishment();
-        establishment.setValuePerPoint(10);        
+        establishment.setId(1L);
+        establishment.setValuePerPoint(10);
         clientTest.setPoints(50);
+        clientTest.setEstablishment(establishment);
 
         when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishment));
         when(clientRepository.findById(1L)).thenReturn(Optional.of(clientTest));
@@ -84,6 +112,67 @@ class PurchaseServiceTest {
         assertEquals(60, clientTest.getPoints());
         verify(clientRepository, times(1)).save(clientTest);
         verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
+
+    @Test
+    void registerPurchaseForbiddenForDifferentEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(2L);
+        PurchaseDto purchaseDto = new PurchaseDto(null, 1L, 1L, BigDecimal.valueOf(100));
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> purchaseService.registerPurchase(purchaseDto));
+        verify(establishmentRepository, never()).findById(any());
+    }
+
+    @Test
+    void registerPurchaseDefaultsToCallerEstablishmentWhenNotProvided() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(1L);
+        PurchaseDto purchaseDto = new PurchaseDto(null, 1L, null, BigDecimal.valueOf(100));
+
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+        establishment.setValuePerPoint(10);
+        clientTest.setPoints(50);
+        clientTest.setEstablishment(establishment);
+
+        when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishment));
+        when(clientRepository.findById(1L)).thenReturn(Optional.of(clientTest));
+
+        purchaseService.registerPurchase(purchaseDto);
+
+        assertEquals(60, clientTest.getPoints());
+        verify(purchaseRepository, times(1)).save(any(Purchase.class));
+    }
+
+    @Test
+    void getPurchaseByIdForbiddenForOtherEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(2L);
+
+        when(purchaseRepository.findByPurchaseIdAndEstablishmentId(1L, 2L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> purchaseService.getPurchaseById(1L));
+    }
+
+    @Test
+    void getPurchaseByIdScopedToOwnEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(1L);
+
+        when(purchaseRepository.findByPurchaseIdAndEstablishmentId(1L, 1L)).thenReturn(Optional.of(purchaseTest));
+
+        // Act
+        PurchaseDto result = purchaseService.getPurchaseById(1L);
+
+        // Assert
+        assertNotNull(result);
     }
 
     @Test

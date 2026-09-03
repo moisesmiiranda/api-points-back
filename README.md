@@ -31,6 +31,35 @@ Para rodar a aplicação:
 
 Esta API utiliza o banco de dados em memória **H2** para fins de desenvolvimento e teste. Os dados são inicializados a partir dos arquivos de migration em `src/main/resources/db/migration` sempre que a aplicação é iniciada.
 
+## 🔐 Autenticação e Autorização
+
+Todos os endpoints, exceto `POST /auth/login`, exigem um JWT válido no header `Authorization: Bearer <token>`.
+
+Existem três papéis (`role`): `PLATFORM_ADMIN`, `ESTABLISHMENT_OWNER` e `ESTABLISHMENT_STAFF`. `ESTABLISHMENT_OWNER` e `ESTABLISHMENT_STAFF` só enxergam/gerenciam dados do próprio estabelecimento; `PLATFORM_ADMIN` tem acesso irrestrito. Veja `openspec/changes/add-jwt-authentication/specs/authorization/spec.md` para as regras completas.
+
+### Login
+
+```
+POST /auth/login
+{
+  "email": "admin@pointsback.local",
+  "password": "ChangeMe123!"
+}
+```
+
+Retorna `{ "accessToken": "...", "tokenType": "Bearer", "expiresInMinutes": 60 }`.
+
+### Variáveis de ambiente
+
+Defina estas variáveis em qualquer ambiente que não seja local/dev — os valores padrão em `application.yml` **não são seguros para produção**:
+
+| Variável | Descrição | Padrão (dev) |
+|---|---|---|
+| `JWT_SECRET` | Chave usada para assinar os JWTs (mín. 32 bytes) | valor de desenvolvimento embutido |
+| `JWT_EXPIRATION_MINUTES` | Tempo de expiração do token, em minutos | `60` |
+| `ADMIN_EMAIL` | E-mail da conta `PLATFORM_ADMIN` inicial, criada automaticamente no primeiro startup se ainda não existir | `admin@pointsback.local` |
+| `ADMIN_PASSWORD` | Senha da conta `PLATFORM_ADMIN` inicial | `ChangeMe123!` |
+
 ## 📚 Endpoints disponíveis
 
 ### 👤 Clientes

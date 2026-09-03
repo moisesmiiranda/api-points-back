@@ -1,8 +1,12 @@
 package com.mmiranda.pointsbackapi.service;
 
 import com.mmiranda.pointsbackapi.dto.EstablishmentDto;
+import com.mmiranda.pointsbackapi.exception.ForbiddenException;
+import com.mmiranda.pointsbackapi.exception.ResourceNotFoundException;
 import com.mmiranda.pointsbackapi.model.Establishment;
+import com.mmiranda.pointsbackapi.model.Role;
 import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
+import com.mmiranda.pointsbackapi.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,9 +19,10 @@ public class EstablishmentService {
     private EstablishmentRepository establishmentRepository;
 
     public EstablishmentDto getEstablishmentById(Long id) {
+        SecurityUtils.requireEstablishmentAccess(id);
         return establishmentRepository.findById(id)
                 .map(EstablishmentDto::toDto)
-                .orElse(null);
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find establishment with id: " + id));
     }
 
     public Establishment createEstablishment(EstablishmentDto establishmentDto) {
@@ -31,9 +36,14 @@ public class EstablishmentService {
 
     @SuppressWarnings("null")
     public EstablishmentDto updateEstablishmentById(Long establishmentId, EstablishmentDto establishmentDto) {
+        if (SecurityUtils.getCurrentUser().role() == Role.ESTABLISHMENT_STAFF) {
+            throw new ForbiddenException("Staff accounts cannot update establishment details");
+        }
+        SecurityUtils.requireEstablishmentAccess(establishmentId);
+
         var establishment = establishmentRepository.findById(establishmentId);
         if (establishment.isEmpty()) {
-            return null;
+            throw new ResourceNotFoundException("Cannot find establishment with id: " + establishmentId);
         }
 
         Establishment establishmentEntity = establishment.get();

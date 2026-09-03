@@ -1,8 +1,12 @@
 package com.mmiranda.pointsbackapi.service;
 
 import com.mmiranda.pointsbackapi.dto.EstablishmentDto;
+import com.mmiranda.pointsbackapi.exception.ForbiddenException;
+import com.mmiranda.pointsbackapi.exception.ResourceNotFoundException;
 import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
+import com.mmiranda.pointsbackapi.security.TestAuth;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,7 +42,13 @@ class EstablishmentServiceTest {
     @BeforeEach
     void setUp() {
         establishmentTest = buildEstablishment();
+        TestAuth.asPlatformAdmin();
         assertNotNull(establishmentTest);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TestAuth.clear();
     }
 
     @Test
@@ -66,12 +77,51 @@ class EstablishmentServiceTest {
         when(establishmentRepository.findById(establishmentId))
                 .thenReturn(Optional.empty());
 
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class,
+                () -> establishmentService.getEstablishmentById(establishmentId));
+        verify(establishmentRepository, times(1)).findById(establishmentId);
+    }
+
+    @Test
+    void testGetEstablishmentByIdForbiddenForOwnerOfAnotherEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentOwner(2L);
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class,
+                () -> establishmentService.getEstablishmentById(1L));
+        verify(establishmentRepository, never()).findById(any());
+    }
+
+    @Test
+    void testGetEstablishmentByIdAllowedForOwnEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentOwner(1L);
+
+        when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishmentTest));
+
         // Act
-        EstablishmentDto result = establishmentService.getEstablishmentById(establishmentId);
+        EstablishmentDto result = establishmentService.getEstablishmentById(1L);
 
         // Assert
-        assertNull(result);
-        verify(establishmentRepository, times(1)).findById(establishmentId);
+        assertNotNull(result);
+        assertEquals("Test Establishment", result.name());
+    }
+
+    @Test
+    void testUpdateEstablishmentByIdForbiddenForStaff() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(1L);
+        EstablishmentDto updateDto = new EstablishmentDto(1L, "New Name", null, null, null, null);
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class,
+                () -> establishmentService.updateEstablishmentById(1L, updateDto));
+        verify(establishmentRepository, never()).findById(any());
     }
 
     @Test
@@ -167,11 +217,9 @@ class EstablishmentServiceTest {
         when(establishmentRepository.findById(establishmentId))
                 .thenReturn(Optional.empty());
 
-        // Act
-        EstablishmentDto result = establishmentService.updateEstablishmentById(establishmentId, updateDto);
-
-        // Assert
-        assertNull(result);
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class,
+                () -> establishmentService.updateEstablishmentById(establishmentId, updateDto));
         verify(establishmentRepository, times(1)).findById(establishmentId);
         verify(establishmentRepository, never()).save(any(Establishment.class));
     }

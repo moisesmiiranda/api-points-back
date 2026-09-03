@@ -1,11 +1,16 @@
 package com.mmiranda.pointsbackapi.service;
 
 import com.mmiranda.pointsbackapi.dto.PurchaseDto;
+import com.mmiranda.pointsbackapi.exception.ForbiddenException;
+import com.mmiranda.pointsbackapi.exception.ResourceNotFoundException;
 import com.mmiranda.pointsbackapi.model.Client;
+import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.model.Purchase;
 import com.mmiranda.pointsbackapi.repository.ClientRepository;
 import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
 import com.mmiranda.pointsbackapi.repository.PurchaseRepository;
+import com.mmiranda.pointsbackapi.security.AuthenticatedUser;
+import com.mmiranda.pointsbackapi.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,27 +28,28 @@ public class PurchaseService {
     private EstablishmentRepository establishmentRepository;
 
     public List<PurchaseDto> listAllPurchases() {
-        List<Purchase> purchases =  purchaseRepository.findAll();
+        AuthenticatedUser caller = SecurityUtils.getCurrentUser();
+        List<Purchase> purchases = caller.isPlatformAdmin()
+                ? purchaseRepository.findAll()
+                : purchaseRepository.findAllByEstablishmentId(caller.establishmentId());
         return purchases.stream()
                 .map(PurchaseDto::toDto)
                 .toList();
     }
 
     public PurchaseDto getPurchaseById(long id) {
-        return purchaseRepository.findById(id)
-                .map(PurchaseDto::toDto)
-                .orElse(null);
+        Purchase purchase = requireScopedPurchase(id);
+        return purchase != null ? PurchaseDto.toDto(purchase) : null;
     }
 
-
     public void registerPurchase(PurchaseDto purchaseDto) {
-
-        var establishment = establishmentRepository
-            .findById(purchaseDto.establishmentId())
-            .orElseThrow(() -> new RuntimeException("Cannot find establishment with id: " + purchaseDto.establishmentId()));
+        Establishment establishment = resolveEstablishmentForWrite(purchaseDto.establishmentId());
 
         Client client = clientRepository.findById(purchaseDto.clientId())
-                .orElseThrow(() -> new RuntimeException("Cannot find client with id: " + purchaseDto.clientId()));
+                .filter(c -> c.getEstablishment() != null
+                        && c.getEstablishment().getId().equals(establishment.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cannot find client with id: " + purchaseDto.clientId() + " in this establishment"));
 
         Purchase purchase = new Purchase();
         purchase.setClient(client);
@@ -63,13 +69,10 @@ public class PurchaseService {
     }
 
     public PurchaseDto updatePurchaseById(Long purchaseId, PurchaseDto purchaseDto) {
-        var purchase = purchaseRepository.findById(purchaseId);
-        
-        if (purchase.isEmpty()) {
+        Purchase purchaseEntity = requireScopedPurchase(purchaseId);
+        if (purchaseEntity == null) {
             return null;
         }
-
-        Purchase purchaseEntity = purchase.get();
 
         // Update only non-null fields
         if (purchaseDto.clientId() != null) {
@@ -81,6 +84,7 @@ public class PurchaseService {
         }
 
         if (purchaseDto.establishmentId() != null) {
+            SecurityUtils.requireEstablishmentAccess(purchaseDto.establishmentId());
             var establishment = establishmentRepository.findById(purchaseDto.establishmentId());
             if (establishment.isEmpty()) {
                 return null;
@@ -94,5 +98,39 @@ public class PurchaseService {
 
         Purchase updatedPurchase = purchaseRepository.save(purchaseEntity);
         return PurchaseDto.toDto(updatedPurchase);
+    }
+
+    /**
+     * PLATFORM_ADMIN sees a plain not-found (null) for a missing id. Every other role gets
+     * an identical ForbiddenException whether the id belongs to another establishment or
+     * doesn't exist at all, so a 403 never leaks which case it was.
+     */
+    private Purchase requireScopedPurchase(long id) {
+        AuthenticatedUser caller = SecurityUtils.getCurrentUser();
+        if (caller.isPlatformAdmin()) {
+            return purchaseRepository.findById(id).orElse(null);
+        }
+        return purchaseRepository.findByPurchaseIdAndEstablishmentId(id, caller.establishmentId())
+                .orElseThrow(() -> new ForbiddenException("You do not have access to this purchase"));
+    }
+
+    private Establishment resolveEstablishmentForWrite(Long requestedEstablishmentId) {
+        AuthenticatedUser caller = SecurityUtils.getCurrentUser();
+        Long establishmentId = requestedEstablishmentId;
+
+        if (caller.isPlatformAdmin()) {
+            if (establishmentId == null) {
+                throw new IllegalArgumentException("establishmentId is required");
+            }
+        } else if (establishmentId == null) {
+            establishmentId = caller.establishmentId();
+        } else if (!caller.belongsToEstablishment(establishmentId)) {
+            throw new ForbiddenException("You do not have access to this establishment");
+        }
+
+        Long resolvedEstablishmentId = establishmentId;
+        return establishmentRepository.findById(resolvedEstablishmentId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cannot find establishment with id: " + resolvedEstablishmentId));
     }
 }

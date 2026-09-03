@@ -60,7 +60,7 @@ class ClientControllerTest {
         // Arrange
         Long clientId = 1L;
         ClientDto clientDto2 = new ClientDto(clientId,"Test Client 2", "test2@example.com",
-                "0987654321", "987.654.321-00", 200);
+                "0987654321", "987.654.321-00", 200, 1L);
 
         when(clientService.listAllClients())
                 .thenReturn(Arrays.asList(clientDto, clientDto2));
@@ -138,7 +138,8 @@ class ClientControllerTest {
                 "updated@example.com",
                 "9999999999",
                 "999.999.999-99",
-                500
+                500,
+                1L
         );
 
         when(clientService.updateClient(clientId, updateDto))
@@ -164,6 +165,7 @@ class ClientControllerTest {
                 null,
                 null,
                 null,
+                null,
                 null
         );
 
@@ -173,7 +175,8 @@ class ClientControllerTest {
                 "test@example.com",
                 "1234567890",
                 "123.456.789-00",
-                100
+                100,
+                1L
         );
 
         when(clientService.updateClient(clientId, updateDto))
@@ -198,7 +201,8 @@ class ClientControllerTest {
                 "updated@example.com",
                 "9999999999",
                 "999.999.999-99",
-                500
+                500,
+                1L
         );
 
         when(clientService.updateClient(clientId, updateDto))
@@ -220,7 +224,8 @@ class ClientControllerTest {
                 "test@example.com",
                 "1234567890",
                 "123.456.789-00",
-                100
+                100,
+                1L
         );
     }
 

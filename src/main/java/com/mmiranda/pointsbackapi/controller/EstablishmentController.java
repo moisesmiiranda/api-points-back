@@ -4,6 +4,7 @@ import com.mmiranda.pointsbackapi.dto.EstablishmentDto;
 import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.service.EstablishmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,11 +23,13 @@ public class EstablishmentController {
     private EstablishmentService establishmentService;
 
     @PostMapping
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public Establishment createEstablishment(@RequestBody EstablishmentDto establishmentDto) {
         return establishmentService.createEstablishment(establishmentDto);
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public List<Establishment> listAllEstablishments() {
         return establishmentService.listAllEstablishments();
     }

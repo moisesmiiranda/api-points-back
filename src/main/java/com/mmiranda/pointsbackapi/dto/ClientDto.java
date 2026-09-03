@@ -8,7 +8,8 @@ public record ClientDto(
         String email,
         String phone,
         String cpf,
-        Integer points
+        Integer points,
+        Long establishmentId
 ) {
     public static ClientDto toDto(Client client) {
         return new ClientDto(
@@ -17,10 +18,15 @@ public record ClientDto(
             client.getEmail(),
             client.getPhone(),
             client.getCpf(),
-            client.getPoints()
+            client.getPoints(),
+            client.getEstablishment() != null ? client.getEstablishment().getId() : null
         );
     }
 
+    /**
+     * Establishment is intentionally not set here - it must be resolved and authorized
+     * against the caller's establishment scope by the service layer.
+     */
     public static Client toEntity(ClientDto dto) {
         return Client.builder()
             .id(dto.id())

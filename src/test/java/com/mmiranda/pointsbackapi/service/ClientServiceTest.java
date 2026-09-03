@@ -3,6 +3,11 @@ package com.mmiranda.pointsbackapi.service;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 
+import com.mmiranda.pointsbackapi.exception.ForbiddenException;
+import com.mmiranda.pointsbackapi.model.Establishment;
+import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
+import com.mmiranda.pointsbackapi.security.TestAuth;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +21,7 @@ import com.mmiranda.pointsbackapi.repository.ClientRepository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,34 +35,45 @@ public class ClientServiceTest {
     @Mock
     private ClientRepository repository;
 
+    @Mock
+    private EstablishmentRepository establishmentRepository;
+
     @InjectMocks
     private ClientService service;
 
     private Client clientTest;
+    private Establishment establishmentTest;
 
     @BeforeEach
     void setUp() {
+        establishmentTest = buildEstablishment();
         clientTest = buildClient();
+        TestAuth.asPlatformAdmin();
         assertNotNull(clientTest);
     }
 
+    @AfterEach
+    void tearDown() {
+        TestAuth.clear();
+    }
 
     @Test
     void testGetClientById() {
         // Arrange
         Long clientId = 1L;
-        
+
         // Act
         when(repository.findById(clientId))
         .thenReturn(java.util.Optional.
             of(clientTest));
-        
+
         ClientDto result = service.getClientById(clientId);
 
         // Assert
         assertNotNull(result);
         assertEquals("Test Client", result.name());
         assertEquals("test@example.com", result.email());
+        assertEquals(1L, result.establishmentId());
     }
 
     @Test
@@ -66,7 +83,7 @@ public class ClientServiceTest {
         // Act
         when(repository.findById(clientId))
         .thenReturn(java.util.Optional.empty());
-        
+
         ClientDto result = service.getClientById(clientId);
 
         // Assert
@@ -74,9 +91,42 @@ public class ClientServiceTest {
     }
 
     @Test
+    void testGetClientByIdForbiddenForOtherEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(2L);
+        Long clientId = 1L;
+
+        when(repository.findByIdAndEstablishmentId(clientId, 2L))
+                .thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> service.getClientById(clientId));
+    }
+
+    @Test
+    void testGetClientByIdScopedToOwnEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(1L);
+        Long clientId = 1L;
+
+        when(repository.findByIdAndEstablishmentId(clientId, 1L))
+                .thenReturn(java.util.Optional.of(clientTest));
+
+        // Act
+        ClientDto result = service.getClientById(clientId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Test Client", result.name());
+    }
+
+    @Test
     void testCreateClient() {
-        // Arrange       
+        // Arrange
         ClientDto clientDto = ClientDto.toDto(clientTest);
+        when(establishmentRepository.findById(1L)).thenReturn(java.util.Optional.of(establishmentTest));
         when(repository.save(any(Client.class))).thenReturn(clientTest);
 
         // Act
@@ -89,11 +139,33 @@ public class ClientServiceTest {
     }
 
     @Test
-    void testCreateClientWithNullEntity() {
+    void testCreateClientRequiresEstablishmentForAdmin() {
         // Arrange
-        Long clientId = 1L;
-        ClientDto clientDto = new ClientDto(clientId,null, null, null, null, null);
+        ClientDto clientDto = new ClientDto(1L, "No Establishment", "x@example.com", null, null, null, null);
 
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> service.createClient(clientDto));
+    }
+
+    @Test
+    void testCreateClientForbiddenForDifferentEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(2L);
+        ClientDto clientDto = new ClientDto(null, "New Client", "new@example.com", null, null, null, 1L);
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> service.createClient(clientDto));
+    }
+
+    @Test
+    void testCreateClientDefaultsToCallerEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(1L);
+        ClientDto clientDto = new ClientDto(null, "New Client", "new@example.com", null, null, null, null);
+
+        when(establishmentRepository.findById(1L)).thenReturn(java.util.Optional.of(establishmentTest));
         when(repository.save(any(Client.class))).thenReturn(clientTest);
 
         // Act
@@ -114,6 +186,7 @@ public class ClientServiceTest {
                 .phone("0987654321")
                 .cpf("987.654.321-00")
                 .points(200)
+                .establishment(establishmentTest)
                 .build();
 
         when(repository.findAll()).thenReturn(Arrays.asList(clientTest, client2));
@@ -127,6 +200,23 @@ public class ClientServiceTest {
         assertEquals("Test Client", result.get(0).name());
         assertEquals("Test Client 2", result.get(1).name());
         verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testListAllClientsScopedForNonAdmin() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentOwner(1L);
+
+        when(repository.findAllByEstablishmentId(1L)).thenReturn(List.of(clientTest));
+
+        // Act
+        List<ClientDto> result = service.listAllClients();
+
+        // Assert
+        assertEquals(1, result.size());
+        verify(repository, times(1)).findAllByEstablishmentId(1L);
+        verify(repository, times(0)).findAll();
     }
 
     @Test
@@ -167,6 +257,19 @@ public class ClientServiceTest {
     }
 
     @Test
+    void testAddPointsForbiddenForOtherEstablishment() {
+        // Arrange
+        TestAuth.clear();
+        TestAuth.asEstablishmentStaff(2L);
+        Long clientId = 1L;
+
+        when(repository.findByIdAndEstablishmentId(clientId, 2L)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        assertThrows(ForbiddenException.class, () -> service.addPoints(clientId, 10));
+    }
+
+    @Test
     void testAddPointsWithNullCurrentPoints() {
         // Arrange
         Long clientId = 1L;
@@ -196,7 +299,8 @@ public class ClientServiceTest {
                 "updated@example.com",
                 "9999999999",
                 "999.999.999-99",
-                500
+                500,
+                null
         );
 
         when(repository.findById(clientId)).thenReturn(java.util.Optional.of(clientTest));
@@ -218,6 +322,7 @@ public class ClientServiceTest {
         ClientDto updateDto = new ClientDto(
                 clientId,
                 "Updated Client",
+                null,
                 null,
                 null,
                 null,
@@ -246,7 +351,8 @@ public class ClientServiceTest {
                 "updated@example.com",
                 "9999999999",
                 "999.999.999-99",
-                500
+                500,
+                null
         );
 
         when(repository.findById(clientId)).thenReturn(java.util.Optional.empty());
@@ -268,6 +374,15 @@ public class ClientServiceTest {
                 .phone("1234567890")
                 .cpf("123.456.789-00")
                 .points(100)
+                .establishment(establishmentTest)
                 .build();
+    }
+
+    public Establishment buildEstablishment() {
+        Establishment establishment = new Establishment();
+        establishment.setId(1L);
+        establishment.setName("Test Establishment");
+        establishment.setValuePerPoint(10);
+        return establishment;
     }
 }

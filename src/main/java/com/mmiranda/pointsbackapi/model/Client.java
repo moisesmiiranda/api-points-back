@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,5 +34,9 @@ public class Client {
 
     @Builder.Default
     private Integer points = 0; // Default points to 0 if not provided
+
+    @ManyToOne
+    @JoinColumn(name = "establishment_id", nullable = false)
+    private Establishment establishment;
 
 }

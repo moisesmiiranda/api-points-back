@@ -3,6 +3,7 @@ package com.mmiranda.pointsbackapi.controller;
 import com.mmiranda.pointsbackapi.service.ClientService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,7 +15,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// Security filters are disabled here: this slice only verifies controller <-> service wiring.
+// Authentication/authorization behavior is covered by SecurityConfig/JWT-focused tests.
 @WebMvcTest(ClientController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ClientControllerIntegrationTest {
 
     @Autowired
@@ -76,7 +80,8 @@ class ClientControllerIntegrationTest {
                         "updated@example.com",
                         "9999999999",
                         "999.999.999-99",
-                        500
+                        500,
+                        1L
                 ));
 
         // Act & Assert
@@ -131,7 +136,8 @@ class ClientControllerIntegrationTest {
                         "test@example.com",
                         "1234567890",
                         "123.456.789-00",
-                        100
+                        100,
+                        1L
                 ));
 
         // Act & Assert
