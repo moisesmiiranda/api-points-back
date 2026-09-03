@@ -14,11 +14,31 @@ The system SHALL support exactly three roles: `PLATFORM_ADMIN`, `ESTABLISHMENT_O
 - **THEN** their token identifies establishment `A`, and every subsequent authorization check is evaluated against establishment `A`
 
 ### Requirement: Account Provisioning Permissions
-The system SHALL restrict who may create, update, or deactivate `User` accounts based on role:
-- `PLATFORM_ADMIN` MAY create, update, or deactivate any account of any role.
-- `ESTABLISHMENT_OWNER` MAY create, update, or deactivate `ESTABLISHMENT_STAFF` accounts belonging to their own establishment only.
-- `ESTABLISHMENT_STAFF` SHALL NOT create, update, or deactivate any account.
-- `ESTABLISHMENT_OWNER` SHALL NOT create, update, or deactivate `PLATFORM_ADMIN` or `ESTABLISHMENT_OWNER` accounts, including their own role or establishment assignment.
+The system SHALL restrict who may list, create, update, or deactivate `User` accounts based on role:
+- `PLATFORM_ADMIN` MAY list, create, update, or deactivate any account of any role.
+- `ESTABLISHMENT_OWNER` MAY list, create, update, or deactivate `ESTABLISHMENT_STAFF` accounts belonging to their own establishment only. When an `ESTABLISHMENT_OWNER` lists accounts, the response SHALL contain only the `ESTABLISHMENT_STAFF` of their own establishment.
+- `ESTABLISHMENT_STAFF` SHALL NOT list, create, update, or deactivate any account.
+- `ESTABLISHMENT_OWNER` SHALL NOT create, update, or deactivate `PLATFORM_ADMIN` or `ESTABLISHMENT_OWNER` accounts, and SHALL NOT change any account's role or establishment assignment (including their own).
+
+#### Scenario: Owner lists only their own establishment's staff
+- **GIVEN** a `User` with role `ESTABLISHMENT_OWNER` associated with establishment `A`
+- **WHEN** they request the list of `User` accounts
+- **THEN** the response contains only `ESTABLISHMENT_STAFF` accounts of establishment `A`, and no `PLATFORM_ADMIN` or `ESTABLISHMENT_OWNER` accounts
+
+#### Scenario: Staff cannot list accounts
+- **GIVEN** a `User` with role `ESTABLISHMENT_STAFF`
+- **WHEN** they request the list of `User` accounts
+- **THEN** the system responds `403 Forbidden`
+
+#### Scenario: Owner manages their own staff
+- **GIVEN** a `User` with role `ESTABLISHMENT_OWNER` associated with establishment `A`
+- **WHEN** they update or deactivate an `ESTABLISHMENT_STAFF` account of establishment `A`
+- **THEN** the change is applied successfully
+
+#### Scenario: Owner cannot manage accounts outside their scope
+- **GIVEN** a `User` with role `ESTABLISHMENT_OWNER` associated with establishment `A`
+- **WHEN** they attempt to update or deactivate a `PLATFORM_ADMIN`, an `ESTABLISHMENT_OWNER`, or any account outside establishment `A`
+- **THEN** the system responds `403 Forbidden`
 
 #### Scenario: Owner creates staff for their own establishment
 - **GIVEN** a `User` with role `ESTABLISHMENT_OWNER` associated with establishment `A`

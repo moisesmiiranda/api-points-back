@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -29,6 +31,12 @@ public class UserController {
     @GetMapping("/me")
     public UserDto getCurrentUser() {
         return userService.getCurrentUserProfile();
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ESTABLISHMENT_OWNER')")
+    public List<UserDto> listUsers() {
+        return userService.listUsers();
     }
 
     @PostMapping

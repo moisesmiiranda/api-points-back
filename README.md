@@ -49,6 +49,24 @@ POST /auth/login
 
 Retorna `{ "accessToken": "...", "tokenType": "Bearer", "expiresInMinutes": 60 }`.
 
+### Contas de teste (seed)
+
+A migration `V5__seed_users.sql` popula a tabela `users` com contas de demonstração para exercitar
+a gestão de usuários. **Todas usam a senha `Test1234!`** (o `PLATFORM_ADMIN` do bootstrap continua
+sendo `admin@pointsback.local` / `ChangeMe123!` e não é inserido pela migration).
+
+| Email | Papel | Estabelecimento | Ativo |
+|---|---|---|---|
+| `admin2@pointsback.local` | `PLATFORM_ADMIN` | — | sim |
+| `owner.super@pointsback.local` | `ESTABLISHMENT_OWNER` | 1 (Supermarket A) | sim |
+| `bruno.super@pointsback.local` / `carla.super@pointsback.local` | `ESTABLISHMENT_STAFF` | 1 | sim |
+| `diego.super@pointsback.local` | `ESTABLISHMENT_STAFF` | 1 | não |
+| `owner.resto@pointsback.local` | `ESTABLISHMENT_OWNER` | 2 (Restaurant B) | sim |
+| `elena.resto@pointsback.local` / `felipe.resto@pointsback.local` | `ESTABLISHMENT_STAFF` | 2 | sim |
+| `gabi.resto@pointsback.local` | `ESTABLISHMENT_STAFF` | 2 | não |
+
+Como o H2 é em memória, o seed é recriado a cada startup.
+
 ### Variáveis de ambiente
 
 Defina estas variáveis em qualquer ambiente que não seja local/dev — os valores padrão em `application.yml` **não são seguros para produção**:
@@ -61,6 +79,25 @@ Defina estas variáveis em qualquer ambiente que não seja local/dev — os valo
 | `ADMIN_PASSWORD` | Senha da conta `PLATFORM_ADMIN` inicial | `ChangeMe123!` |
 
 ## 📚 Endpoints disponíveis
+
+### 👥 Usuários
+
+Acesso: `PLATFORM_ADMIN` gerencia qualquer conta. `ESTABLISHMENT_OWNER` só enxerga e gerencia os
+`ESTABLISHMENT_STAFF` do próprio estabelecimento e não pode alterar `role`/`establishmentId`.
+`ESTABLISHMENT_STAFF` não acessa nenhum desses endpoints (exceto `/users/me`).
+
+- `GET /users/me` — perfil do usuário autenticado (qualquer papel).
+- `GET /users` — `PLATFORM_ADMIN` recebe todas as contas; `ESTABLISHMENT_OWNER` recebe apenas os
+  `ESTABLISHMENT_STAFF` do seu estabelecimento.
+- `POST /users` — cria uma conta. `PLATFORM_ADMIN` (qualquer papel) ou `ESTABLISHMENT_OWNER`
+  (apenas `ESTABLISHMENT_STAFF` do próprio estabelecimento).
+  ```json
+  { "name": "Jane", "email": "jane@x.com", "password": "secret", "role": "ESTABLISHMENT_STAFF", "establishmentId": 1 }
+  ```
+- `PUT /users/{id}` — atualização parcial (só os campos não nulos). Corpo aceita `name`, `email`,
+  `password`, `role`, `establishmentId`, `active`. Só `PLATFORM_ADMIN` pode mudar `role`/`establishmentId`
+  (e trocar para um papel diferente de `PLATFORM_ADMIN` exige `establishmentId`).
+- `DELETE /users/{id}` — desativação soft (`active = false`), retorna `204`.
 
 ### 👤 Clientes
 

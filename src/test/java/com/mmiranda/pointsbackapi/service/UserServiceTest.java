@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -348,6 +349,41 @@ class UserServiceTest {
         userService.deactivateUser(2L);
 
         assertEquals(false, owner.isActive());
+    }
+
+    @Test
+    void platformAdminListsEveryAccountMappedToDto() {
+        TestAuth.asPlatformAdmin();
+        User admin = User.builder().id(1L).name("Admin").email("admin@test.com")
+                .role(Role.PLATFORM_ADMIN).active(true).build();
+        User staff = User.builder().id(3L).name("Staff").email("staff@a.com")
+                .role(Role.ESTABLISHMENT_STAFF).establishment(establishmentA).active(false).build();
+
+        when(userRepository.findAllByOrderByIdAsc()).thenReturn(List.of(admin, staff));
+
+        List<UserDto> result = userService.listUsers();
+
+        assertEquals(2, result.size());
+        assertEquals("admin@test.com", result.get(0).email());
+        assertEquals(null, result.get(0).establishmentId());
+        assertEquals(1L, result.get(1).establishmentId());
+        assertEquals(false, result.get(1).active());
+    }
+
+    @Test
+    void establishmentOwnerListsOnlyOwnStaff() {
+        TestAuth.asEstablishmentOwner(1L);
+        User staff = User.builder().id(3L).name("Staff").email("staff@a.com")
+                .role(Role.ESTABLISHMENT_STAFF).establishment(establishmentA).active(true).build();
+
+        when(userRepository.findAllByEstablishmentIdAndRoleOrderByIdAsc(1L, Role.ESTABLISHMENT_STAFF))
+                .thenReturn(List.of(staff));
+
+        List<UserDto> result = userService.listUsers();
+
+        assertEquals(1, result.size());
+        assertEquals("staff@a.com", result.get(0).email());
+        verify(userRepository, never()).findAllByOrderByIdAsc();
     }
 
     @Test

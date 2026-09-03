@@ -16,6 +16,8 @@ import com.mmiranda.pointsbackapi.security.SecurityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -38,6 +40,27 @@ public class UserService {
         User user = userRepository.findById(current.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return UserDto.toDto(user);
+    }
+
+    /**
+     * Lists accounts the caller may manage:
+     * <ul>
+     *   <li>{@code PLATFORM_ADMIN}: every account.</li>
+     *   <li>{@code ESTABLISHMENT_OWNER}: the {@code ESTABLISHMENT_STAFF} of their own establishment
+     *       (the only accounts an owner is allowed to edit or deactivate).</li>
+     * </ul>
+     * {@code ESTABLISHMENT_STAFF} never reaches this method - the controller restricts it to
+     * {@code hasAnyRole('PLATFORM_ADMIN','ESTABLISHMENT_OWNER')}.
+     */
+    public List<UserDto> listUsers() {
+        AuthenticatedUser caller = SecurityUtils.getCurrentUser();
+        List<User> users = caller.isPlatformAdmin()
+                ? userRepository.findAllByOrderByIdAsc()
+                : userRepository.findAllByEstablishmentIdAndRoleOrderByIdAsc(
+                        caller.establishmentId(), Role.ESTABLISHMENT_STAFF);
+        return users.stream()
+                .map(UserDto::toDto)
+                .toList();
     }
 
     public UserDto createUser(CreateUserRequestDto request) {
