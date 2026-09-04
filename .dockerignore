@@ -1,0 +1,10 @@
+.git
+.gradle
+.idea
+build
+out
+bin
+*.iml
+.vscode
+openspec
+README.md

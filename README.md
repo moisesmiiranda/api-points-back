@@ -27,9 +27,37 @@ Para rodar a aplicação:
 ./gradlew bootRun
 ```
 
+## 🐳 Rodando via Docker Compose
+
+Sobe a API e um banco **PostgreSQL** juntos, com as migrations do Flyway aplicadas automaticamente:
+
+```bash
+docker compose up --build
+```
+
+A API fica disponível em `http://localhost:8081` e o Postgres em `localhost:5432`
+(banco/usuário/senha padrão: `pointsback`/`pointsback`/`pointsback`).
+
+Variáveis de ambiente aceitas pelo `docker-compose.yml` (todas com valor padrão de dev):
+`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+
+Os dados ficam persistidos no volume `pointsback-db-data` entre reinicializações. Para
+recomeçar do zero (reaplicar as migrations em um banco vazio):
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
 ## 🗄️ Banco de Dados
 
-Esta API utiliza o banco de dados em memória **H2** para fins de desenvolvimento e teste. Os dados são inicializados a partir dos arquivos de migration em `src/main/resources/db/migration` sempre que a aplicação é iniciada.
+- **Via `docker compose`** ou **`./gradlew bootRun`**: usam **PostgreSQL**. Rodando fora do
+  Docker, é preciso ter um Postgres acessível (ex: `docker compose up -d db`) e, se os valores
+  não forem os padrões de dev, definir `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`.
+  Os dados são inicializados a partir das migrations em `src/main/resources/db/migration` no
+  primeiro startup.
+- **Testes (`./gradlew test`)**: usam o banco em memória **H2**, configurado em
+  `src/test/resources/application.yml` — sem necessidade de nenhum serviço externo.
 
 ## 🔐 Autenticação e Autorização
 
@@ -65,7 +93,10 @@ sendo `admin@pointsback.local` / `ChangeMe123!` e não é inserido pela migratio
 | `elena.resto@pointsback.local` / `felipe.resto@pointsback.local` | `ESTABLISHMENT_STAFF` | 2 | sim |
 | `gabi.resto@pointsback.local` | `ESTABLISHMENT_STAFF` | 2 | não |
 
-Como o H2 é em memória, o seed é recriado a cada startup.
+Como as migrations do Flyway rodam apenas uma vez por banco (controle via
+`flyway_schema_history`), o seed é inserido no primeiro startup contra um banco vazio.
+Com `docker compose`, os dados persistem no volume entre reinicializações; para recriá-los,
+rode `docker compose down -v` antes de subir novamente.
 
 ### Variáveis de ambiente
 
@@ -226,7 +257,8 @@ Acesso: `PLATFORM_ADMIN` gerencia qualquer conta. `ESTABLISHMENT_OWNER` só enxe
 - ☕ Java 17+
 - 🌱 Spring Boot
 - 🗄️ Spring Data JPA
-- 💾 H2 Database
+- 🐘 PostgreSQL (💾 H2 nos testes)
 - ✈️ Flyway
+- 🐳 Docker / Docker Compose
 - 🛠️ Gradle
 - ✨ Lombok

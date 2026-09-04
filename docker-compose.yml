@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-pointsback}
+      POSTGRES_USER: ${DB_USER:-pointsback}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pointsback}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pointsback-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pointsback} -d ${DB_NAME:-pointsback}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-pointsback}
+      DB_USER: ${DB_USER:-pointsback}
+      DB_PASSWORD: ${DB_PASSWORD:-pointsback}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-secret-key-please-override-in-prod-1234567890}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@pointsback.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMe123!}
+    ports:
+      - "8081:8081"
+
+volumes:
+  pointsback-db-data:
