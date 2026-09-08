@@ -49,6 +49,36 @@ docker compose down -v
 docker compose up --build
 ```
 
+## 📊 Qualidade de código (SonarQube)
+
+O `docker-compose.yml` também sobe um **SonarQube Community Edition** (com banco H2 embutido —
+adequado para uso local, não para produção) para medir cobertura de testes, bugs, code smells,
+vulnerabilidades e duplicação.
+
+```bash
+docker compose up -d sonarqube
+```
+
+Acesse `http://localhost:9000`.
+
+- **Usuário padrão**: `admin`
+- **Senha padrão**: `admin`
+
+No primeiro login o SonarQube obriga a troca dessa senha. Depois, gere um token de análise em
+**My Account → Security** (ou `http://localhost:9000/account/security`) e use-o para rodar o
+scanner:
+
+```bash
+SONAR_TOKEN=<seu-token> ./gradlew sonar
+```
+
+Isso reaproveita o relatório do JaCoCo (`build/reports/jacoco/test/jacocoTestReport.xml`, gerado
+junto com `./gradlew test`) e envia as métricas para o dashboard do projeto em
+`http://localhost:9000/dashboard?id=api-points-back`.
+
+> Se estiver rodando o scanner de dentro de um container (em vez da máquina host), aponte para o
+> serviço pelo nome na rede do compose: `./gradlew sonar -Dsonar.host.url=http://sonarqube:9000`.
+
 ## 🗄️ Banco de Dados
 
 - **Via `docker compose`** ou **`./gradlew bootRun`**: usam **PostgreSQL**. Rodando fora do
@@ -260,5 +290,6 @@ Acesso: `PLATFORM_ADMIN` gerencia qualquer conta. `ESTABLISHMENT_OWNER` só enxe
 - 🐘 PostgreSQL (💾 H2 nos testes)
 - ✈️ Flyway
 - 🐳 Docker / Docker Compose
+- 📊 SonarQube
 - 🛠️ Gradle
 - ✨ Lombok

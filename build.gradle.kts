@@ -3,6 +3,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.4"
 	id("io.spring.dependency-management") version "1.1.7"
 	jacoco
+	id("org.sonarqube") version "4.4.1.3373"
 }
 
 group = "com.mmiranda"
@@ -44,6 +45,7 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	jvmArgs("-Djdk.attach.allowAttachSelf=true", "-XX:+EnableDynamicAgentLoading")
 	finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -54,6 +56,22 @@ tasks.jacocoTestReport {
 		html.required.set(true)
 		csv.required.set(false)
 	}
+}
+
+sonar {
+	properties {
+		property("sonar.projectKey", "api-points-back")
+		property("sonar.projectName", "PointsBack API")
+		property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000")
+		property(
+			"sonar.coverage.jacoco.xmlReportPaths",
+			layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.path,
+		)
+	}
+}
+
+tasks.named("sonar") {
+	dependsOn(tasks.jacocoTestReport)
 }
 
 tasks.register("verifyCoverageThreshold") {

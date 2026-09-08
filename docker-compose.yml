@@ -32,5 +32,22 @@ services:
     ports:
       - "8081:8081"
 
+  sonarqube:
+    image: sonarqube:community
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+      - sonarqube-logs:/opt/sonarqube/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
 volumes:
   pointsback-db-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  sonarqube-logs:
