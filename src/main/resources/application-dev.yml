@@ -1,0 +1,24 @@
+# Local development ONLY. Activate with SPRING_PROFILES_ACTIVE=dev.
+# Never use this profile in a deployed environment: it loads demo users with a known password.
+spring:
+  datasource:
+    password: ${DB_PASSWORD:pointsback}
+  mail:
+    host: localhost
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+# Emails are written to the log (with their links) instead of being sent
+app:
+  base-url: ${APP_BASE_URL:http://localhost:5173}
+  mail:
+    provider: log
+    from: no-reply@pointsback.local
+
+jwt:
+  secret: ${JWT_SECRET:dev-only-insecure-secret-key-please-override-in-prod-1234567890}
+
+admin:
+  bootstrap:
+    email: ${ADMIN_EMAIL:admin@pointsback.local}
+    password: ${ADMIN_PASSWORD:ChangeMe123!}

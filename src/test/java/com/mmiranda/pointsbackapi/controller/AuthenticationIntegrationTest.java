@@ -29,6 +29,9 @@ class AuthenticationIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     @Test
     void protectedEndpointRejectsRequestWithoutToken() throws Exception {
         mockMvc.perform(get("/establishments/all"))
@@ -90,6 +93,7 @@ class AuthenticationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].email").exists());
 
+        jdbc.update("UPDATE users SET must_change_password = FALSE WHERE email = ?", "owner.u@test.com");
         String ownerToken = extractAccessToken(login("owner.u@test.com", "Passw0rd!"));
 
         // Owner creates a staff member for their own establishment.
@@ -147,7 +151,7 @@ class AuthenticationIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType("application/json")
                         .content("""
-                                {"name":"New Shop","email":"shop@test.com","phone":"123","cnpj":"00.000.000/0001-00","valuePerPoint":5}
+                                {"name":"New Shop","email":"shop@test.com","phone":"123","cnpj":"11.222.333/0001-81","valuePerPoint":5}
                                 """))
                 .andExpect(status().isOk());
     }

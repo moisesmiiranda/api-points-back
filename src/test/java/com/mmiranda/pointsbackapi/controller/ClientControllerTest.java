@@ -1,6 +1,11 @@
 package com.mmiranda.pointsbackapi.controller;
 
+import com.mmiranda.pointsbackapi.dto.AdjustPointsRequestDto;
 import com.mmiranda.pointsbackapi.dto.ClientDto;
+import com.mmiranda.pointsbackapi.dto.LedgerEntryDto;
+import com.mmiranda.pointsbackapi.dto.PageDto;
+import com.mmiranda.pointsbackapi.dto.RedeemPreviewDto;
+import com.mmiranda.pointsbackapi.model.RewardMode;
 import com.mmiranda.pointsbackapi.model.Client;
 import com.mmiranda.pointsbackapi.service.ClientService;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +65,7 @@ class ClientControllerTest {
         // Arrange
         Long clientId = 1L;
         ClientDto clientDto2 = new ClientDto(clientId,"Test Client 2", "test2@example.com",
-                "0987654321", "987.654.321-00", 200, 1L);
+                "0987654321", "111.444.777-35", 200, 1L);
 
         when(clientService.listAllClients())
                 .thenReturn(Arrays.asList(clientDto, clientDto2));
@@ -95,37 +100,34 @@ class ClientControllerTest {
     }
 
     @Test
-    void testUpdateClientPoints() {
-        // Arrange
+    void testAdjustPoints() {
         Long clientId = 1L;
-        int pointsToAdd = 10;
+        AdjustPointsRequestDto request = new AdjustPointsRequestDto(10, "Welcome bonus");
+        ClientDto adjusted = new ClientDto(clientId, "Test Client", "test@example.com", "1234567890",
+                "529.982.247-25", 10, 1L);
+        when(clientService.adjustPoints(clientId, request)).thenReturn(adjusted);
 
-        when(clientService.addPoints(clientId, pointsToAdd))
-                .thenReturn(true);
+        ClientDto result = clientController.adjustPoints(clientId, request);
 
-        // Act
-        boolean result = clientController.updateClientPoints(clientId, pointsToAdd);
-
-        // Assert
-        assertEquals(true, result);
-        verify(clientService, times(1)).addPoints(clientId, pointsToAdd);
+        assertEquals(10, result.points());
+        verify(clientService, times(1)).adjustPoints(clientId, request);
     }
 
     @Test
-    void testUpdateClientPointsClientNotFound() {
-        // Arrange
-        Long clientId = 999L;
-        int pointsToAdd = 10;
+    void testStatement() {
+        PageDto<LedgerEntryDto> page = new PageDto<>(java.util.List.of(), 0, 20, 0, 0);
+        when(clientService.statement(1L, 0, 20)).thenReturn(page);
 
-        when(clientService.addPoints(clientId, pointsToAdd))
-                .thenReturn(false);
+        assertEquals(page, clientController.statement(1L, 0, 20));
+    }
 
-        // Act
-        boolean result = clientController.updateClientPoints(clientId, pointsToAdd);
+    @Test
+    void testRedeemable() {
+        RedeemPreviewDto preview = new RedeemPreviewDto(100, new java.math.BigDecimal("10.00"), RewardMode.DISCOUNT,
+                new java.math.BigDecimal("0.1000"), 50, new java.math.BigDecimal("5.00"));
+        when(clientService.redeemPreview(1L, new java.math.BigDecimal("20"))).thenReturn(preview);
 
-        // Assert
-        assertEquals(false, result);
-        verify(clientService, times(1)).addPoints(clientId, pointsToAdd);
+        assertEquals(preview, clientController.redeemable(1L, new java.math.BigDecimal("20")));
     }
 
     @Test
@@ -137,7 +139,7 @@ class ClientControllerTest {
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",
-                "999.999.999-99",
+                "529.982.247-25",
                 500,
                 1L
         );
@@ -174,7 +176,7 @@ class ClientControllerTest {
                 "Updated Name",
                 "test@example.com",
                 "1234567890",
-                "123.456.789-00",
+                "529.982.247-25",
                 100,
                 1L
         );
@@ -200,7 +202,7 @@ class ClientControllerTest {
                 "Updated Client",
                 "updated@example.com",
                 "9999999999",
-                "999.999.999-99",
+                "529.982.247-25",
                 500,
                 1L
         );
@@ -223,7 +225,7 @@ class ClientControllerTest {
                 "Test Client",
                 "test@example.com",
                 "1234567890",
-                "123.456.789-00",
+                "529.982.247-25",
                 100,
                 1L
         );
@@ -235,7 +237,7 @@ class ClientControllerTest {
                 .name("Test Client")
                 .email("test@example.com")
                 .phone("1234567890")
-                .cpf("123.456.789-00")
+                .person(com.mmiranda.pointsbackapi.model.Person.builder().cpf("52998224725").build())
                 .points(100)
                 .build();
     }

@@ -6,6 +6,7 @@ import com.mmiranda.pointsbackapi.dto.UserDto;
 import com.mmiranda.pointsbackapi.exception.DuplicateEmailException;
 import com.mmiranda.pointsbackapi.exception.ForbiddenException;
 import com.mmiranda.pointsbackapi.exception.ResourceNotFoundException;
+import com.mmiranda.pointsbackapi.mail.EmailTemplates;
 import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.model.Role;
 import com.mmiranda.pointsbackapi.model.User;
@@ -13,9 +14,14 @@ import com.mmiranda.pointsbackapi.repository.EstablishmentRepository;
 import com.mmiranda.pointsbackapi.repository.UserRepository;
 import com.mmiranda.pointsbackapi.security.AuthenticatedUser;
 import com.mmiranda.pointsbackapi.security.SecurityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -26,13 +32,26 @@ public class UserService {
     private final UserRepository userRepository;
     private final EstablishmentRepository establishmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
+    private final Clock clock;
+    private final String baseUrl;
+    private final SecureRandom random = new SecureRandom();
 
     public UserService(UserRepository userRepository,
                         EstablishmentRepository establishmentRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        PasswordResetService passwordResetService,
+                        EmailService emailService,
+                        Clock clock,
+                        @Value("${app.base-url}") String baseUrl) {
         this.userRepository = userRepository;
         this.establishmentRepository = establishmentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordResetService = passwordResetService;
+        this.emailService = emailService;
+        this.clock = clock;
+        this.baseUrl = baseUrl.replaceAll("/+$", "");
     }
 
     public UserDto getCurrentUserProfile() {
@@ -85,16 +104,28 @@ public class UserService {
 
         Establishment establishment = resolveEstablishment(request.role(), request.establishmentId());
 
+        // No password given: the person is invited by email to choose their own. A password given by the
+        // manager is temporary: it has to be replaced at the first access.
+        boolean invited = request.password() == null;
         User user = User.builder()
                 .name(request.name())
                 .email(request.email())
-                .passwordHash(passwordEncoder.encode(request.password()))
+                .passwordHash(passwordEncoder.encode(invited ? randomPassword() : request.password()))
                 .role(request.role())
                 .establishment(establishment)
                 .active(true)
+                .mustChangePassword(!invited)
                 .build();
+        User saved = userRepository.save(user);
 
-        return UserDto.toDto(userRepository.save(user));
+        if (invited) {
+            passwordResetService.sendInvite(saved);
+        } else {
+            emailService.sendAsync(EmailTemplates.welcomeWithTemporaryPassword(
+                    saved.getEmail(), saved.getName(),
+                    establishment != null ? establishment.getName() : null, baseUrl + "/login"));
+        }
+        return UserDto.toDto(saved);
     }
 
     public UserDto updateUser(Long targetId, UpdateUserRequestDto request) {
@@ -111,7 +142,10 @@ public class UserService {
             target.setEmail(request.email());
         }
         if (request.password() != null) {
+            // A password set by a manager is temporary, and it ends the person's current sessions
             target.setPasswordHash(passwordEncoder.encode(request.password()));
+            target.setMustChangePassword(true);
+            target.setPasswordChangedAt(LocalDateTime.now(clock));
         }
         if (request.active() != null) {
             target.setActive(request.active());
@@ -185,5 +219,12 @@ public class UserService {
 
     private Long establishmentIdOf(User user) {
         return user.getEstablishment() != null ? user.getEstablishment().getId() : null;
+    }
+
+    /** Long random password nobody knows: the account can only be opened through the invitation link. */
+    private String randomPassword() {
+        byte[] bytes = new byte[24];
+        random.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

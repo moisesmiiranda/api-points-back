@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${DB_USER:-pointsback}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-pointsback}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pointsback-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -26,6 +26,10 @@ services:
       DB_NAME: ${DB_NAME:-pointsback}
       DB_USER: ${DB_USER:-pointsback}
       DB_PASSWORD: ${DB_PASSWORD:-pointsback}
+      # Local stack only: the dev profile loads demo data and dev defaults.
+      # A real deployment must NOT set this and must provide JWT_SECRET, ADMIN_EMAIL,
+      # ADMIN_PASSWORD and DB_PASSWORD (see .env.example).
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-secret-key-please-override-in-prod-1234567890}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@pointsback.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMe123!}

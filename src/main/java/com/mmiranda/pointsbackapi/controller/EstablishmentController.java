@@ -3,7 +3,10 @@ package com.mmiranda.pointsbackapi.controller;
 import com.mmiranda.pointsbackapi.dto.EstablishmentDto;
 import com.mmiranda.pointsbackapi.model.Establishment;
 import com.mmiranda.pointsbackapi.service.EstablishmentService;
+import com.mmiranda.pointsbackapi.validation.OnCreate;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +27,7 @@ public class EstablishmentController {
 
     @PostMapping
     @PreAuthorize("hasRole('PLATFORM_ADMIN')")
-    public Establishment createEstablishment(@RequestBody EstablishmentDto establishmentDto) {
+    public Establishment createEstablishment(@Validated(OnCreate.class) @RequestBody EstablishmentDto establishmentDto) {
         return establishmentService.createEstablishment(establishmentDto);
     }
 
@@ -40,7 +43,7 @@ public class EstablishmentController {
     }
 
     @PutMapping("/{id}")
-    public EstablishmentDto updateEstablishmentById(@PathVariable Long id, @RequestBody EstablishmentDto establishmentDto) {
+    public EstablishmentDto updateEstablishmentById(@PathVariable Long id, @Valid @RequestBody EstablishmentDto establishmentDto) {
         return establishmentService.updateEstablishmentById(id, establishmentDto);
     }
 }

@@ -57,12 +57,19 @@ public class JwtService {
      * Throws JwtException (or a subclass) for any invalid, tampered, or expired token.
      */
     public AuthenticatedUser parseToken(String token) throws JwtException {
-        Claims claims = Jwts.parser()
+        return toAuthenticatedUser(parseClaims(token));
+    }
+
+    /** Validates signature and expiration and returns the raw claims (the filter also needs {@code iat}). */
+    public Claims parseClaims(String token) throws JwtException {
+        return Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
 
+    public AuthenticatedUser toAuthenticatedUser(Claims claims) {
         Long userId = Long.valueOf(claims.getSubject());
         String email = claims.get(CLAIM_EMAIL, String.class);
         Role role = Role.valueOf(claims.get(CLAIM_ROLE, String.class));

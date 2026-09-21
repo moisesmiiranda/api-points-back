@@ -16,7 +16,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,7 +43,12 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    @Mock
+    private PasswordResetService passwordResetService;
+
+    @Mock
+    private EmailService emailService;
+
     private UserService userService;
 
     private Establishment establishmentA;
@@ -52,6 +56,8 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        userService = new UserService(userRepository, establishmentRepository, passwordEncoder,
+                passwordResetService, emailService, java.time.Clock.systemDefaultZone(), "http://localhost:5173/");
         establishmentA = new Establishment();
         establishmentA.setId(1L);
         establishmentB = new Establishment();
@@ -396,5 +402,65 @@ class UserServiceTest {
         UserDto result = userService.getCurrentUserProfile();
 
         assertEquals("admin@test.com", result.email());
+    }
+
+    // ------------------------------------------------------------------ invitations and temporary passwords
+
+    @Test
+    void aUserCreatedWithoutAPasswordIsInvitedByEmailAndNeedsNoForcedChange() {
+        TestAuth.asPlatformAdmin();
+        CreateUserRequestDto request = new CreateUserRequestDto("Ana", "ana@a.com", null, Role.ESTABLISHMENT_OWNER, 1L);
+        when(userRepository.existsByEmail("ana@a.com")).thenReturn(false);
+        when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishmentA));
+        when(passwordEncoder.encode(any())).thenReturn("random-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserDto result = userService.createUser(request);
+
+        assertEquals(false, result.mustChangePassword());
+        org.mockito.ArgumentCaptor<String> raw = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(passwordEncoder).encode(raw.capture());
+        assertEquals(32, raw.getValue().length(), "a long random password nobody knows");
+        verify(passwordResetService).sendInvite(any(User.class));
+        verify(emailService, never()).sendAsync(any());
+    }
+
+    @Test
+    void aPasswordGivenByTheManagerIsTemporaryAndTheWelcomeEmailHasNoPassword() {
+        TestAuth.asPlatformAdmin();
+        establishmentA.setName("Padaria Boa");
+        CreateUserRequestDto request = new CreateUserRequestDto("Ana", "ana@a.com", "Provisoria1", Role.ESTABLISHMENT_OWNER, 1L);
+        when(userRepository.existsByEmail("ana@a.com")).thenReturn(false);
+        when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishmentA));
+        when(passwordEncoder.encode("Provisoria1")).thenReturn("hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserDto result = userService.createUser(request);
+
+        assertEquals(true, result.mustChangePassword());
+        org.mockito.ArgumentCaptor<com.mmiranda.pointsbackapi.mail.EmailMessage> email =
+                org.mockito.ArgumentCaptor.forClass(com.mmiranda.pointsbackapi.mail.EmailMessage.class);
+        verify(emailService).sendAsync(email.capture());
+        assertEquals("ana@a.com", email.getValue().to());
+        assertEquals(true, email.getValue().text().contains("http://localhost:5173/login"));
+        assertEquals(false, email.getValue().text().contains("Provisoria1"));
+        verify(passwordResetService, never()).sendInvite(any());
+    }
+
+    @Test
+    void aPasswordSetByAManagerOnAnExistingUserIsTemporaryAndEndsTheirSessions() {
+        TestAuth.asPlatformAdmin();
+        User target = User.builder().id(9L).name("Bia").email("bia@a.com").passwordHash("old")
+                .role(Role.ESTABLISHMENT_STAFF).establishment(establishmentA).active(true).build();
+        when(userRepository.findById(9L)).thenReturn(Optional.of(target));
+        when(establishmentRepository.findById(1L)).thenReturn(Optional.of(establishmentA));
+        when(passwordEncoder.encode("Provisoria2")).thenReturn("new-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        userService.updateUser(9L, new UpdateUserRequestDto(null, null, "Provisoria2", null, null, null));
+
+        assertEquals("new-hash", target.getPasswordHash());
+        assertEquals(true, target.isMustChangePassword());
+        assertNotNull(target.getPasswordChangedAt());
     }
 }

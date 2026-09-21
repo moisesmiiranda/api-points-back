@@ -36,7 +36,7 @@ class EstablishmentControllerTest {
             "Test Establishment",
             "test@example.com",
             "1234567890",
-            "12.345.678/0001-90",
+            "11.222.333/0001-81",
             10
         );
     }
@@ -50,7 +50,7 @@ class EstablishmentControllerTest {
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
-            "99.999.999/9999-99",
+            "11.444.777/0001-61",
             15
         );
 
@@ -76,7 +76,7 @@ class EstablishmentControllerTest {
             "Updated Establishment",
             "updated@example.com",
             "9999999999",
-            "99.999.999/9999-99",
+            "11.444.777/0001-61",
             15
         );
 
@@ -109,7 +109,7 @@ class EstablishmentControllerTest {
             "Updated Name",
             "test@example.com",
             "1234567890",
-            "12.345.678/0001-90",
+            "11.222.333/0001-81",
             10
         );
 
@@ -145,7 +145,7 @@ class EstablishmentControllerTest {
             "Test Establishment",
             "test@example.com",
             "1234567890",
-            "12.345.678/0001-90",
+            "11.222.333/0001-81",
             20
         );
 
@@ -171,7 +171,7 @@ class EstablishmentControllerTest {
             "Updated Establishment",
             "newemail@example.com",
             "8888888888",
-            "88.888.888/8888-88",
+            "11.444.777/0001-61",
             25
         );
 
@@ -180,7 +180,7 @@ class EstablishmentControllerTest {
             "Updated Establishment",
             "newemail@example.com",
             "8888888888",
-            "88.888.888/8888-88",
+            "11.444.777/0001-61",
             25
         );
 
@@ -195,7 +195,7 @@ class EstablishmentControllerTest {
         assertEquals("Updated Establishment", result.name());
         assertEquals("newemail@example.com", result.email());
         assertEquals("8888888888", result.phone());
-        assertEquals("88.888.888/8888-88", result.cnpj());
+        assertEquals("11.444.777/0001-61", result.cnpj());
         assertEquals(25, result.valuePerPoint());
         verify(establishmentService, times(1)).updateEstablishmentById(eq(establishmentId), any(EstablishmentDto.class));
     }

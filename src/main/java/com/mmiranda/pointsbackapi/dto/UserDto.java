@@ -9,8 +9,13 @@ public record UserDto(
         String email,
         Role role,
         Long establishmentId,
-        boolean active
+        boolean active,
+        boolean mustChangePassword
 ) {
+    public UserDto(Long id, String name, String email, Role role, Long establishmentId, boolean active) {
+        this(id, name, email, role, establishmentId, active, false);
+    }
+
     public static UserDto toDto(User user) {
         return new UserDto(
                 user.getId(),
@@ -18,7 +23,8 @@ public record UserDto(
                 user.getEmail(),
                 user.getRole(),
                 user.getEstablishment() != null ? user.getEstablishment().getId() : null,
-                user.isActive()
+                user.isActive(),
+                user.isMustChangePassword()
         );
     }
 }
