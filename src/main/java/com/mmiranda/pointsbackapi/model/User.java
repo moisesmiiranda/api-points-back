@@ -16,6 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -46,4 +48,13 @@ public class User {
 
     @Builder.Default
     private boolean active = true;
+
+    /** True for accounts whose password was set by someone else: it must be replaced before anything else. */
+    @Builder.Default
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = false;
+
+    /** Tokens issued before this moment are rejected, so a password change ends the other sessions. */
+    @Column(name = "password_changed_at")
+    private LocalDateTime passwordChangedAt;
 }

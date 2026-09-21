@@ -2,6 +2,8 @@ server:
   port: 8081
 
 spring:
+  profiles:
+    active: test
   application:
     name: pointsbackapi
   datasource:
@@ -15,6 +17,7 @@ spring:
       ddl-auto: none
   flyway:
     enabled: true
+    locations: classpath:db/migration,classpath:db/dev
 
 jwt:
   secret: ${JWT_SECRET:dev-only-insecure-secret-key-please-override-in-prod-1234567890}
@@ -24,3 +27,19 @@ admin:
   bootstrap:
     email: ${ADMIN_EMAIL:admin@pointsback.local}
     password: ${ADMIN_PASSWORD:ChangeMe123!}
+
+security:
+  login-rate-limit:
+    max-attempts: 5
+    window-minutes: 15
+
+app:
+  base-url: http://localhost:5173
+  mail:
+    provider: log
+    from: no-reply@test.local
+  password-reset:
+    ttl-minutes: 60
+    invite-ttl-hours: 72
+    max-requests: 5
+    window-minutes: 15

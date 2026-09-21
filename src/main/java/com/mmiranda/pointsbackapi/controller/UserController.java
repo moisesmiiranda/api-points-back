@@ -4,6 +4,7 @@ import com.mmiranda.pointsbackapi.dto.CreateUserRequestDto;
 import com.mmiranda.pointsbackapi.dto.UpdateUserRequestDto;
 import com.mmiranda.pointsbackapi.dto.UserDto;
 import com.mmiranda.pointsbackapi.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,13 +42,13 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ESTABLISHMENT_OWNER')")
-    public UserDto createUser(@RequestBody CreateUserRequestDto request) {
+    public UserDto createUser(@Valid @RequestBody CreateUserRequestDto request) {
         return userService.createUser(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ESTABLISHMENT_OWNER')")
-    public UserDto updateUser(@PathVariable Long id, @RequestBody UpdateUserRequestDto request) {
+    public UserDto updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequestDto request) {
         return userService.updateUser(id, request);
     }
 

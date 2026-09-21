@@ -11,8 +11,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // Security filters are disabled here: this slice only verifies controller <-> service wiring.
@@ -28,35 +29,25 @@ class ClientControllerIntegrationTest {
     private ClientService clientService;
 
     @Test
-    void testUpdateClientPointsSuccess() throws Exception {
-        // Arrange
+    void testAdjustPointsSuccess() throws Exception {
         Long clientId = 1L;
-        int points = 10;
+        when(clientService.adjustPoints(eq(clientId), any()))
+                .thenReturn(new com.mmiranda.pointsbackapi.dto.ClientDto(
+                        clientId, "Client", "c@example.com", "11999990000", "529.982.247-25", 10, 1L));
 
-        when(clientService.addPoints(clientId, points))
-                .thenReturn(true);
-
-        // Act & Assert
-        mockMvc.perform(put("/clients/{id}/points", clientId)
-                .param("points", String.valueOf(points)))
+        mockMvc.perform(post("/clients/{id}/points/adjust", clientId)
+                .contentType("application/json")
+                .content("{\"points\":10,\"reason\":\"Welcome bonus\"}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+                .andExpect(jsonPath("$.points").value(10));
     }
 
     @Test
-    void testUpdateClientPointsNotFound() throws Exception {
-        // Arrange
-        Long clientId = 999L;
-        int points = 10;
-
-        when(clientService.addPoints(clientId, points))
-                .thenReturn(false);
-
-        // Act & Assert
-        mockMvc.perform(put("/clients/{id}/points", clientId)
-                .param("points", String.valueOf(points)))
-                .andExpect(status().isOk())
-                .andExpect(content().string("false"));
+    void testAdjustPointsRequiresAReason() throws Exception {
+        mockMvc.perform(post("/clients/{id}/points/adjust", 1L)
+                .contentType("application/json")
+                .content("{\"points\":10}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -68,7 +59,7 @@ class ClientControllerIntegrationTest {
                     "name": "Updated Client",
                     "email": "updated@example.com",
                     "phone": "9999999999",
-                    "cpf": "999.999.999-99",
+                    "cpf": "529.982.247-25",
                     "points": 500
                 }
                 """;
@@ -79,7 +70,7 @@ class ClientControllerIntegrationTest {
                         "Updated Client",
                         "updated@example.com",
                         "9999999999",
-                        "999.999.999-99",
+                        "529.982.247-25",
                         500,
                         1L
                 ));
@@ -100,7 +91,7 @@ class ClientControllerIntegrationTest {
                     "name": "Updated Client",
                     "email": "updated@example.com",
                     "phone": "9999999999",
-                    "cpf": "999.999.999-99",
+                    "cpf": "529.982.247-25",
                     "points": 500
                 }
                 """;
@@ -135,7 +126,7 @@ class ClientControllerIntegrationTest {
                         "Updated Name",
                         "test@example.com",
                         "1234567890",
-                        "123.456.789-00",
+                        "529.982.247-25",
                         100,
                         1L
                 ));

@@ -2,7 +2,11 @@ package com.mmiranda.pointsbackapi.controller;
 
 import com.mmiranda.pointsbackapi.dto.PurchaseDto;
 import com.mmiranda.pointsbackapi.service.PurchaseService;
+import com.mmiranda.pointsbackapi.validation.OnCreate;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +23,8 @@ public class PurchaseController {
     private PurchaseService purchaseService;
 
     @PostMapping
-    public void registerPurchase(@RequestBody PurchaseDto purchaseDto) {
-        purchaseService.registerPurchase(purchaseDto);
+    public PurchaseDto registerPurchase(@Validated(OnCreate.class) @RequestBody PurchaseDto purchaseDto) {
+        return purchaseService.registerPurchase(purchaseDto);
     }
 
     @GetMapping
@@ -32,8 +36,14 @@ public class PurchaseController {
     public PurchaseDto getPurchaseById(@PathVariable Long id) {
         return purchaseService.getPurchaseById(id);
     }
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','ESTABLISHMENT_OWNER')")
+    public PurchaseDto cancelPurchase(@PathVariable Long id) {
+        return purchaseService.cancelPurchase(id);
+    }
+
     @PutMapping("/{id}")
-    public PurchaseDto updatePurchaseById(@PathVariable Long id, @RequestBody PurchaseDto purchaseDto) {
+    public PurchaseDto updatePurchaseById(@PathVariable Long id, @Valid @RequestBody PurchaseDto purchaseDto) {
         return purchaseService.updatePurchaseById(id, purchaseDto);
     }
 }

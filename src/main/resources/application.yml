@@ -1,29 +1,58 @@
 server:
   port: 8081
 
+# Secure by default: no profile means "production-like". Secrets have NO defaults here, so the
+# app refuses to start when they are missing. Local development must opt in explicitly with
+# SPRING_PROFILES_ACTIVE=dev (see application-dev.yml).
 spring:
   application:
     name: pointsbackapi
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pointsback}
     username: ${DB_USER:pointsback}
-    password: ${DB_PASSWORD:pointsback}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: none
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: true
   flyway:
     enabled: true
+    # Schema migrations only. Demo data lives in db/dev and is loaded by the dev profile.
+    locations: classpath:db/migration
 
-# JWT signing/expiration. Override JWT_SECRET in every non-local environment.
 jwt:
-  secret: ${JWT_SECRET:dev-only-insecure-secret-key-please-override-in-prod-1234567890}
+  secret: ${JWT_SECRET}
   expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
 
-# Bootstrap PLATFORM_ADMIN account created on first startup if it doesn't already exist.
-# Override both via env vars in every non-local environment.
+# PLATFORM_ADMIN account created on first startup if it doesn't already exist.
 admin:
   bootstrap:
-    email: ${ADMIN_EMAIL:admin@pointsback.local}
-    password: ${ADMIN_PASSWORD:ChangeMe123!}
+    email: ${ADMIN_EMAIL}
+    password: ${ADMIN_PASSWORD}
+
+# Public URL of the frontend (links in emails point to it) and email delivery. SMTP works with any provider.
+app:
+  base-url: ${APP_BASE_URL}
+  mail:
+    provider: ${MAIL_PROVIDER:smtp}
+    from: ${MAIL_FROM}
+  password-reset:
+    ttl-minutes: ${PASSWORD_RESET_TTL_MINUTES:60}
+    invite-ttl-hours: ${INVITE_TTL_HOURS:72}
+    max-requests: ${PASSWORD_RESET_MAX_REQUESTS:5}
+    window-minutes: 15
+
+# Failed-login throttling (per client IP + email).
+security:
+  login-rate-limit:
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    window-minutes: ${LOGIN_WINDOW_MINUTES:15}
