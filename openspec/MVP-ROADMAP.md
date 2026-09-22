@@ -1,5 +1,7 @@
 # Roadmap do MVP (primeiro cliente pagante)
 
+> **Estado atual e como retomar: [MVP-STATUS.md](MVP-STATUS.md).** Changes 01 a 05 feitos; faltam 06 e 07.
+
 Origem: avaliação em `~/.claude/plans/mvp-primeiro-cliente.md`. Cada item abaixo é um change do OpenSpec em `openspec/changes/`, com `proposal.md` e `tasks.md`. Ainda não têm `design.md` nem `specs/`; isso é gerado ao rodar `/opsx:propose` (ou o fluxo equivalente) em cada change, antes de `/opsx:apply`.
 
 Tags nas tarefas: `[BACK]` api-points-back, `[FRONT]` points-back-front, `[INFRA]` deploy/operação, `[LEGAL]` documentos jurídicos.
